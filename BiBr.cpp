@@ -8,13 +8,15 @@ const int MaxN = 1100000;
 
 const int MaxM = 7700000;
 
-const int Maxn = 20000;
+const int Maxn = 50000;
 
-const int TIME_LIM = 3600;
+const int TIME_LIM = 10800;
 
 int N, M, K, wG;
 
 pair <int, int> *E;
+
+#define gets(str) (fgets(str,200,stdin))
 
 void read_clq() {
     char str[200], stmp[10];
@@ -27,9 +29,8 @@ void read_clq() {
     assert(N <= MaxN);
     assert(M <= MaxM);
     E = new pair <int, int> [M];
-	//去重边
     static set < pair <int, int> > st;
-	int m = 0;
+    int m = 0;
     for (int i = 0; i < M; ++i) {
         int u, v;
         scanf("%s%d%d", stmp, &u, &v);
@@ -52,14 +53,10 @@ void read_graph() {
     getline(cin, str);
     stringstream fs;
     fs << str;
-    fs >> N >> M;
-    int x;
-    while (fs >> x);
-    assert(N <= MaxN);
-    assert(M <= MaxM);
-    E = new pair <int, int> [M];
+    fs >> N >> M;//M is not a reliable number of the edges
+    vector<pair<int, int> > vedges;
     static set <int> st;
-    int m = 0;
+    //int m = 0;
     for (int i = 0; i < N; ++i) {
         getline(cin, str);
         stringstream ss;
@@ -67,14 +64,24 @@ void read_graph() {
         int x;
         while (ss >> x) {
             --x;
-            if (x >= i || st.count(x))
+            assert(0 <= x && x < N);
+            if (x >= i || st.count(x)) 
                 continue;
-            st.insert(x);
-            E[m++] = make_pair(i, x);
+            st.insert(x);            
+			//cerr << m << M <<endl;
+			//assert(m < M);
+            //E[m++] = make_pair(i, x);
+			//m++;
+			vedges.push_back(make_pair(i, x));
         }
         st.clear();
     }
-    M = m;
+	if (vedges.size() != M){
+		fprintf(stderr, "Given edege number %d, Actual edge number %d\n", M, vedges.size());
+	}
+	M = vedges.size();
+	E = new pair <int, int> [M];
+	copy(vedges.begin(), vedges.end(), E);
 }
 
 map <int, int> mp;
@@ -177,7 +184,7 @@ struct BIT_SET {
         for (int i = 0; i <= n; ++i)
             rhs.buf[i] = buf[i];
     }
-} *adjN, *invN, inD, inG;
+} *adjN, *invN, inD;
 
 int head[MaxN], *nxt, *to, etot;
 
@@ -193,9 +200,9 @@ bool outcore[MaxN];
 
 bool del[Maxn], ins[Maxn];
 
-int notadj[Maxn];	
+int notadj[Maxn];
 
-vector <int> svex; //解集
+vector <int> svex;
 
 bool PreProcess(int S) {
     nxt = new int [M + M];
@@ -242,11 +249,9 @@ bool PreProcess(int S) {
     return true;
 }
 
-//up_bound[i] core number 
 int up_bound[Maxn], ordID[Maxn];
 
 void getOrd() {
-	//core decomposition
     memset(degree, 0, n * sizeof(int));
     memset(head, -1, n * sizeof(int));
     etot = 0;
@@ -257,7 +262,7 @@ void getOrd() {
         addedge(head + v, u);
     }
     static priority_queue < pair <int, int> > Q;
-    memset(outcore, 0, n * sizeof(bool)); 
+    memset(outcore, 0, n * sizeof(bool));
     for (int i = 0; i < n; ++i)
         Q.push(make_pair(-degree[i], i));
     int curB = 1;
@@ -267,7 +272,7 @@ void getOrd() {
             continue;
         outcore[u] = true;
         if (degree[u] < curB - K) {
-            up_bound[u] = curB; 
+            up_bound[u] = curB;
         } else {
             curB = degree[u] + K + 1;
             up_bound[u] = curB;
@@ -283,9 +288,6 @@ void getOrd() {
     for (int i = 0; i < n; ++i)
         ordID[i] = i;
     sort(ordID, ordID + n, [](const int &x, const int &y) { return up_bound[x] < up_bound[y]; } );
-	/**
-	按照Up_bound对点进行排序，然后重新编号，建立一个新的图
-	*/
     for (int i = 0; i < n; ++i)
         nV[ordID[i]] = i;
     memset(degree, 0, n * sizeof(int));
@@ -306,14 +308,13 @@ void getOrd() {
     }
     for (int i = 0; i < n; ++i) {
         adjN[i].cp(invN[i]);
-        invN[i].flip();//补图0-1 bitset
+        invN[i].flip();
     }
-    inG.init(n); inG.flip(); //inG 进行分支时，inG[i]=1表示在整个图里面（有可能解集里面）
     inD.init(n); inD.flip();
-    memset(del, 0, n * sizeof(bool));//标记一个点是否已经被删除
-    memset(ins, 0, n * sizeof(bool));//标记是否在解集中
-    memset(notadj, 0, n * sizeof(int));//notadj[i] 在解集中和i不相邻的点的个数
-    svex.clear(); //解集合内的点
+    memset(del, 0, n * sizeof(bool));
+    memset(ins, 0, n * sizeof(bool));
+    memset(notadj, 0, n * sizeof(int));
+    svex.clear();
 }
 
 clock_t startTime;
@@ -336,23 +337,21 @@ void exit_program() {
     delete [] invN;
     exit(0);
 }
-//将u从图中删除
+
 inline void delfrD(int u) {
-    inG.set(u);
     inD.set(u);
     del[u] = true;
     for (int e = head[u]; ~e; e = nxt[e])
-        --degree[to[e]]; //所有u的邻接点度数减1
+        --degree[to[e]];
 }
-//将u加回图中
+
 inline void addtoD(int u) {
-    inG.set(u);
-    inD.set(u);//标记当前在图中，尚未加入解集合的点 inD.test(u) == 1 
+    inD.set(u);
     del[u] = false;
     for (int e = head[u]; ~e; e = nxt[e])
         ++degree[to[e]];
 }
-//从解集合中删除
+
 inline void delfrS(int u) {
     inD.set(u);
     ins[u] = false;
@@ -375,9 +374,9 @@ inline void addtoS(int u) {
 
 const int INF = 0x3f3f3f3f;
 
-const int MaxSn = 500;
+const int MaxSn = 20000;
 
-const int MaxSm = 500000;
+const int MaxSm = 2000000;
 
 class MaximumFlow {
 private:
@@ -386,8 +385,8 @@ private:
         int cap;
     } edge[MaxSm];
     int cap_backup[MaxSm];
-    int tol;//总的边数
-    int head[MaxSn];//head[u]点u的邻接边的起始点
+    int tol;
+    int head[MaxSn];
     int dep[MaxSn];
     int gap[MaxSn], que[MaxSn];
     int cur[MaxSn];
@@ -500,15 +499,14 @@ private:
     MaximumFlow mf;
     int nV[Maxn], oID[Maxn];
 public:
-    bool solve(bool cals, int bound) { //检查集合svex内的点是否构成一个k-bundle
+    bool solve(bool cals, int bound) {
         int nn = 0;
         if (cals) {
-			//构造最大流的图
-            for (auto u : svex)//重新编号
+            for (auto u : svex)
                 nV[u] = nn, oID[nn++] = u;
             mf.init(nn + nn);
-			for (auto u : svex)//每个点拆分为边nv[u],nv[u]+nn
-				mf.addedge(nV[u], nV[u] + nn, 1);
+            for (auto u : svex)
+                mf.addedge(nV[u], nV[u] + nn, 1);
             for (auto u : svex) {
                 for (auto v : svex) {
                     if (!adjN[u].test(v))
@@ -516,7 +514,6 @@ public:
                     mf.addedge(nV[u] + nn, nV[v], INF);
                 }
             }
-			//计算最后加入的点与其他点之间最大流，此处可以优化，减少最大流运行次数
             int u = nV[svex.back()];
             for (int i = 0; i < nn; ++i) {
                 if (i == u || adjN[oID[u]].test(oID[i]))
@@ -554,28 +551,26 @@ public:
 
 inline bool canadd(int u) {
     int tot = 0;
-    for (auto v : svex) 
-		if (!adjN[u].test(v)) {
-			if (++tot >= K)
-				return false;
-			if (notadj[v] >= K - 1)
-				return false;
+    for (auto v : svex) if (!adjN[u].test(v)) {
+        if (++tot >= K)
+            return false;
+        if (notadj[v] >= K - 1)
+            return false;
     }
     svex.push_back(u);
-    bool ret = vc.solve(true, svex.size() - K);//检查点联通度
+    bool ret = vc.solve(true, svex.size() - K);
     svex.pop_back();
     return ret;
 }
 
 int dis[Maxn];
 
-//以s为起点，检查所有点到s的距离
 void bfs(int s) {
     memset(dis, -1, n * sizeof(int));
     dis[s] = 0;
     int fr = 0, re = 0;
     que[re ++] = s;
-    while(fr ^ re) { //while (fr != re)
+    while(fr ^ re) {
         int u = que[fr ++];
         for(int e = head[u]; ~e; e = nxt[e]) {
             int v = to[e];
@@ -592,27 +587,6 @@ void check_timeout() {
         exit_program();
 }
 
-/*计算染色数*/
-int get_color() {
-    BIT_SET Q, P;
-    inG.cp(P);
-    int tot = 0;
-    while (!P.empty()) {
-        int cnt = 0;
-        P.cp(Q);
-        do {
-            int u = Q.lowbit();
-            ++cnt;
-            if (cnt > K)
-                cnt = K;
-            P.set(u); Q.set(u);
-            Q &= invN[u];
-        } while (!Q.empty());
-        tot += cnt;
-    }
-    return tot;
-}
-
 void get_color(vector < pair <int, int> > &lst) {
     BIT_SET Q, P;
     inD.cp(P);
@@ -621,7 +595,7 @@ void get_color(vector < pair <int, int> > &lst) {
         int cnt = 0;
         P.cp(Q);
         do {
-            int u = Q.lowbit(); //最低位
+            int u = Q.lowbit();
             ++cnt;
             if (cnt > K)
                 cnt = K;
@@ -633,201 +607,102 @@ void get_color(vector < pair <int, int> > &lst) {
     }
 }
 
-void dfs_kbundle(int curS, bool check) {
-    ++dfs_node;
-    LB = max(LB, (int)svex.size());
-    if (curS <= LB)
-        return;
-    if (check && vc.solve(false, curS - K)) {//判断当前解集是不是一个kbundle
-        LB = curS;
-        return;
-    }
-    vector < pair <int, int> > lst;
-    get_color(lst); //染色，分支 list[i].second是第i个点的染色数
-    int m = lst.size();
-    if (m == 0)
-        return;
-    check = false;
-    for (int i = m - 1; i >= 0; --i) {
-        if ((int)svex.size() + lst[i].second <= LB) {
-            for (int j = i + 1; j < m; ++j)
-                addtoD(lst[j].first);
-            return;
-        }
-        check_timeout();
-        if (canadd(lst[i].first)) {
-            addtoS(lst[i].first);
-            dfs_kbundle(curS, check);
-            delfrS(lst[i].first);
-        }
-        --curS;
-        check = true;
-        delfrD(lst[i].first);
-    }
-    for (int i = 0; i < m; ++i)
-        addtoD(lst[i].first);
-}
-
-//curS：当前整张图的大小
 void dfs(int curS) {
     ++dfs_node;
     LB = max(LB, (int)svex.size());
     if (curS <= LB)
         return;
     int minID = -1;
-	//当前图中度数最小的点minID，判断整张图是否是一个k-plex
     for(int i = 0; i < n; ++ i) if(!del[i]) {
         if(minID == -1 || degree[i] < degree[minID])
             minID = i;
     }
-    if(degree[minID] >= curS - K) { //整张图都是一个ｋ-plex，利用k-bundle分支
-        dfs_kbundle(curS, true); //进入k-bundle分支
+    if(degree[minID] >= curS - K && vc.solve(false, curS - K)) {
+        LB = curS;
         return;
     }
-	
-	//reduce minID
-    if(degree[minID] < LB + 1 - K) {
-        if(ins[minID])
-			return; //minID在解集合中
-        delfrD(minID); //从图中Reduce
-        dfs(curS - 1);	
-        addtoD(minID);
-        return;
-    }
-	//图中maxID和当前解集合不相邻最多的点，
-    int maxID = -1;
-    for(int i = 0; i < n; ++ i) if(!del[i]) {
-        if(maxID == -1 || notadj[i] > notadj[maxID])
-            maxID = i;
-    }
-	//如果maxID不在解集合中，直接reduce 该点。
-    if(!ins[maxID] && notadj[maxID] >= K) {
-        delfrD(maxID);
-        dfs(curS - 1);
-        addtoD(maxID);
-        return;
-    }
-	//如果maxID在解集合中，且是sat点。reduce 所有和其不相邻的点
-    if(ins[maxID] && notadj[maxID] >= K - 1) {
-        if(notadj[maxID] >= K) return;
-        vector <int> todel;
-		//reduce所有和maxid不相邻的点
-        for(int i = 0; i < n; ++ i) 
-			if(!del[i] && !ins[i] && !adjN[maxID].test(i)) {
-            todel.push_back(i);
-        }
-        if(todel.size()) {
-            for(auto x : todel)
-				delfrD(x);
-            dfs(curS - todel.size());
-            for(auto x : todel) 
-				addtoD(x);
+	check_timeout();
+    if(degree[minID] < curS - K) {
+        if(degree[minID] < LB + 1 - K) {
+            if(ins[minID]) return;
+            delfrD(minID);
+            dfs(curS - 1);
+            addtoD(minID);
             return;
         }
-    }
-    if (svex.size()) {
-		//从svex中随机取出一个点，删除所有和该点距离>max(2,K+K-LB)的点  
-        vector <int> sofar;
-        int u = svex[rand() % svex.size()];
-        bfs(u);
-        for(int v = 0; v < n; ++ v) if(!del[v]) {
-            if(dis[v] == -1 || dis[v] > max(2, K + K - LB)) {
-                if(ins[v]) return;
-                sofar.push_back(v);
+        int maxID = -1;
+        for(int i = 0; i < n; ++ i) if(!del[i]) {
+            if(maxID == -1 || notadj[i] > notadj[maxID])
+                maxID = i;
+        }
+        if(!ins[maxID] && notadj[maxID] >= K) {
+            delfrD(maxID);
+            dfs(curS - 1);
+            addtoD(maxID);
+            return;
+        }
+        if(ins[maxID] && notadj[maxID] >= K - 1) {
+            if(notadj[maxID] >= K) return;
+            vector <int> todel;
+            for(int i = 0; i < n; ++ i) if(!del[i] && !ins[i] && !adjN[maxID].test(i)) {
+                todel.push_back(i);
+            }
+            if(todel.size()) {
+                for(auto x : todel) delfrD(x);
+                dfs(curS - todel.size());
+                for(auto x : todel) addtoD(x);
+                return;
             }
         }
-        if(sofar.size()) {
-            for(auto x : sofar) delfrD(x);
-            dfs(curS - sofar.size());
-            for(auto x : sofar) addtoD(x);
-            return;
+        if (svex.size()) {
+            vector <int> sofar;
+            int u = svex[rand() % svex.size()];
+            bfs(u);
+            for(int v = 0; v < n; ++ v) if(!del[v]) {
+                if(dis[v] == -1 || dis[v] > max(2, K + K - LB)) {
+                    if(ins[v]) return;
+                    sofar.push_back(v);
+                }
+            }
+            if(sofar.size()) {
+                for(auto x : sofar) delfrD(x);
+                dfs(curS - sofar.size());
+                for(auto x : sofar) addtoD(x);
+                return;
+            }
         }
     }
-    if (get_color() <= LB)
-        return;
-    check_timeout();
-	//分支：branch包含所有和最小度数点,i.e., minId 不相邻且不在svex中的点
+    
     vector <int> branch;
-    for(int x = 0; x < n; ++ x) 
-		if(!del[x] && x != minID && !ins[x]) {
-			if(!adjN[minID].test(x))
-				branch.push_back(x);
-		}
-    if(ins[minID]) {//k-plex分支
-        int canselect = K - 1 - notadj[minID], pos = -1;
-        bool all = true;
-        for(int i = 0; i < canselect; ++ i) {
-            delfrD(branch[i]);
-            if(i && !canadd(branch[i - 1])) { //加入i后是否仍旧是一个kbundle
-                addtoD(branch[i]);
-                all = false;
-                break;
-            }
-            if(i) {
-                addtoS(branch[i - 1]);
-                pos = i - 1;
-            }
-            dfs(curS - 1);
-            addtoD(branch[i]);
+    for (int i = 0; i < n; ++i)
+        if (!del[i] && !ins[i])
+            branch.push_back(i);
+    int m = branch.size();
+    for (int i = m - 1; i >= 0; --i) {
+        if ((int)svex.size() + i + 1 <= LB) {
+            for (int j = i + 1; j < m; ++j)
+                addtoD(branch[j]);
+            return;
         }
-        if (all && (canselect == 0 || canadd(branch[canselect - 1]))) {
-            for(int i = canselect; i < (int)branch.size(); ++ i)
-                delfrD(branch[i]);
-            if(canselect) 
-				addtoS(branch[canselect - 1]);
-            dfs(curS - branch.size() + canselect);
-            if(canselect) 
-				delfrS(branch[canselect - 1]);
-            for(int i = canselect; i < (int)branch.size(); ++ i)
-                addtoD(branch[i]);
-        }
-        for(int i = 0; i <= pos; ++ i)
+        if (canadd(branch[i])) {
+            addtoS(branch[i]);
+            dfs(curS);
             delfrS(branch[i]);
-    } else {
-        delfrD(minID);
-        dfs(curS - 1);
-        addtoD(minID);
-        if(!canadd(minID)) return;
-        addtoS(minID);
-        int canselect = K - 1 - notadj[minID];
-        int pos = -1;
-        bool all = true;
-        for(int i = 0; i < canselect; ++ i) {
-            delfrD(branch[i]);
-            if(i && !canadd(branch[i - 1])) {
-                addtoD(branch[i]);
-                all = false;
-                break;
-            }
-            if(i) {
-                addtoS(branch[i - 1]);
-                pos = i - 1;
-            }
-            dfs(curS - 1);
-            addtoD(branch[i]);
         }
-        if (all && (canselect == 0 || canadd(branch[canselect - 1]))) {
-            for(int i = canselect; i < (int)branch.size(); ++ i)
-                delfrD(branch[i]);
-            if(canselect) addtoS(branch[canselect - 1]);
-            dfs(curS - branch.size() + canselect);
-            if(canselect) delfrS(branch[canselect - 1]);
-            for(int i = canselect; i < (int)branch.size(); ++ i)
-                addtoD(branch[i]);
-        }
-        for(int i = 0; i <= pos; ++ i)
-            delfrS(branch[i]);
-        delfrS(minID);
+        --curS;
+        delfrD(branch[i]);
     }
+    for (int i = 0; i < m; ++i)
+        addtoD(branch[i]);
 }
 
 void work() {
     srand(time(NULL));
     startTime = clock();
     dfs_node = 0;
-    LB = max(wG, K);//wg=最大团 
+    LB = max(wG, K);
     for (int i = 0; i < 16; ++i)
-        twoPow[1 << i] = i;//预先算出2^i 
+        twoPow[1 << i] = i;
     if (!PreProcess(LB + 1))
         exit_program();
     getOrd();

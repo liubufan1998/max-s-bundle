@@ -8,7 +8,7 @@ const int MaxN = 1100000;
 
 const int MaxM = 7700000;
 
-const int Maxn = 20000;
+const int Maxn = 50000;
 
 const int TIME_LIM = 3600;
 
@@ -16,6 +16,7 @@ int N, M, K, wG;
 
 pair <int, int> *E;
 
+#define gets(str) (fgets(str,200,stdin))
 void read_clq() {
     char str[200], stmp[10];
     while (true) {
@@ -369,9 +370,9 @@ inline void addtoS(int u) {
 
 const int INF = 0x3f3f3f3f;
 
-const int MaxSn = 500;
+const int MaxSn = 20000;
 
-const int MaxSm = 500000;
+const int MaxSm = 2000000;
 
 class MaximumFlow {
 private:
