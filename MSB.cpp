@@ -10,7 +10,7 @@ pair <int, int> *E;
 //gets() is deprecated  
 #define gets(str) (fgets(str,200,stdin))
 
-void read_clq() {
+void read_clq() { // 我没有想到这些代码里面居然还包括了去除重复边！
     char str[200], stmp[10];
     while (true) {
         gets(str);
@@ -19,17 +19,17 @@ void read_clq() {
     }
     sscanf(str, "%s%s%d%d", stmp, stmp, &N, &M);
     E = new pair <int, int> [M];
-    static set < pair <int, int> > st;
+    static set < pair <int, int> > st; // 使用一个 set 数据结构 st 来记录已经添加过的边，以防止重复添加相同的边。
     int m = 0;
     for (int i = 0; i < M; ++i) {
         int u, v;
         scanf("%s%d%d", stmp, &u, &v);
-        if (u == v)
+        if (u == v) // 如果 u 和 v 相等，表示自环，直接跳过。
             continue;
         --u; --v;
         assert(0 <= u && u < N);
         assert(0 <= v && v < N);
-        if (u > v)
+        if (u > v) // 如果 u 大于 v，将它们交换，以确保每个边的起始顶点编号小于结束顶点编号
             swap(u, v);
         if (st.count(make_pair(u, v)))
             continue;
@@ -37,7 +37,7 @@ void read_clq() {
         assert(m < M);
         E[m++] = make_pair(u, v);
     }
-    M = m;
+    M = m; // 最后，将 M 更新为实际有效的边数目 m，并清空 set。
     st.clear();
 }
 
@@ -46,7 +46,8 @@ void read_graph() {
     getline(cin, str);
     stringstream fs;
     fs << str;
-    fs >> N >> M;//M is not a reliable number of the edges
+    fs >> N >> M;//M is not a reliable number of the edges 
+    // 从 fs 中提取两个整数 N 和 M，分别表示图的顶点数和边数。注意，M 这里被提取，但后面的代码会进行修正，因为它可能不是准确的边数。
     vector<pair<int, int> > vedges;
     static set <int> st;
     //int m = 0;
@@ -58,18 +59,19 @@ void read_graph() {
         while (ss >> x) {
             --x;
             assert(0 <= x && x < N);
-            if (x >= i || st.count(x)) 
+            if (x >= i || st.count(x)) // 如果 x 大于或等于当前顶点的索引 i，或者在 st 集合中已经存在，就跳过这个邻接顶点，以避免处理重复的边。
                 continue;
             st.insert(x);            
 			//cerr << m << M <<endl;
 			//assert(m < M);
             //E[m++] = make_pair(i, x);
 			//m++;
-			vedges.push_back(make_pair(i, x));
+			vedges.push_back(make_pair(i, x)); // 如果通过上述条件检查，该邻接顶点是有效的且未处理的边，则将其添加到 vedges 向量中，并将 (i, x) 形式的边信息存储在其中。
         }
         st.clear();
     }
 	if (vedges.size() != M){
+        // 检查 vedges 中的边的数量是否等于初始提供的 M 值，如果不相等，则输出一条错误信息，指出提供的边数与实际边数不一致。
 		fprintf(stderr, "Given edege number %d, Actual edge number %d\n", M, vedges.size());
 	}
 	M = vedges.size();
@@ -80,6 +82,7 @@ void read_graph() {
 map <int, int> mp;
 
 inline int find_id(int u) {
+    // 这段代码的作用是将输入的顶点标识 u 映射到内部的标识，并返回映射后的标识值。这有助于管理和重排顶点标识，以便在图算法中使用。
     auto it = mp.find(u);
     if (it != mp.end())
         return it->second;
@@ -88,6 +91,8 @@ inline int find_id(int u) {
 }
 
 void read_txt() {
+    // 这段代码的作用是从文本文件中读取图的顶点数和边数，然后解析每条边的信息，并将有效的边存储在 E 数组中。
+    // 同时，它会跳过自环边和重复的边。如果存在重新编号的操作，也会将顶点重新编号为连续的整数。
     char str[200];
     gets(str); gets(str);
     scanf("%s%s%d%s%d", str, str, &N, str, &M);
@@ -98,13 +103,13 @@ void read_txt() {
     for (int i = 0; i < M; ++i) {
         int u, v;
         scanf("%d%d", &u, &v);
-        if (u == v)
+        if (u == v) // 检查 u 和 v 是否相等，如果相等，说明存在自环，跳过这条边。
             continue;
         u = find_id(u);
         v = find_id(v);
         if (u > v)
             swap(u, v);
-        if (st.count(make_pair(u,v)))
+        if (st.count(make_pair(u,v))) // 检查 (u, v) 和 (v, u) 是否已经存在于集合 st 中，如果存在，说明这条边已经添加过了，跳过。
             continue;
         st.insert(make_pair(u, v));
         assert(m < M);
