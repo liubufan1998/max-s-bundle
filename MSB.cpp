@@ -107,13 +107,14 @@ void read_txt()
     同时，它会跳过自环边和重复的边。如果存在重新编号的操作，也会将顶点重新编号为连续的整数。*/
     char str[200]; /*声明一个字符数组str，用于临时存储从文件中读取的文本行*/
     /*读取文本文件的一行内容，通常用于跳过文件中的注释或无关的信息。下面调用了两次，可能用于跳过前两行不相关的文本。*/
-    gets(str);
-    gets(str);
+    // gets(str);
+    // gets(str);
     /*使用scanf函数从文本文件中读取格式化的数据。它会读取两个字符串（通常是标签或标识符），然后读取两个整数，分别存储为N和M。这里假定N是顶点数，M是边数。*/
-    scanf("%s%s%d%s%d", str, str, &N, str, &M);
+    // scanf("%s%s%d%s%d", str, str, &N, str, &M);
+    scanf("%d %d", &N, &M);
     /*再次使用gets跳过两行不相关的文本。*/
-    gets(str);
-    gets(str);
+    // gets(str);
+    // gets(str);
     E = new pair<int, int>[M];     /*动态分配一个大小为M的pair<int, int>数组E，用于存储图的边。*/
     int m = 0;                     /* 声明一个整数m，用于跟踪有效边的数量。*/
     static set<pair<int, int>> st; /*创建一个静态的set容器st，用于存储已经添加的边的信息，以便检查重复边。*/
