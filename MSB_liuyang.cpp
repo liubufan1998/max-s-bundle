@@ -3,7 +3,7 @@
 using namespace std;
 typedef long long ll;
 const int TIME_LIM = 3600;
-
+/*这个文件主要是我自己进行一些修改！*/
 int N, M, K, wG;
 pair<int, int> *E;
 
@@ -644,6 +644,7 @@ void getOrd()
     push() 加入一个元素 ；
     size() 返回优先队列中拥有的元素的个数； 
     top() 返回优先队列中有最高优先级的元素。 */
+
     memset(outcore, 0, n * sizeof(bool));     /*outcore用来标记顶点是否符合kplex的基本度数要求。*/
 
     /*将所有顶点按度数的降序放入优先队列。*/
@@ -664,7 +665,7 @@ void getOrd()
         /*如果顶点u已经不符合顶点的度数要求了，则跳过它。*/
         if (outcore[u])
             continue;
-        outcore[u] = true; /*将这个顶点标记为已经处理过一次了，防止后面重复处理。*/
+        outcore[u] = true; /*否则将这个顶点标记为已经处理过一次了，防止后面重复处理。*/
         /*接下来设置每一个顶点的上界。*/
         if (degree[u] < curB - K) /*如果顶点u在当前顶点数量下都不符合kplex的要求，那么就把它的上界设为当前的下界curB*/
         {
@@ -680,30 +681,36 @@ void getOrd()
         {
             /*对于每个邻居顶点v，如果v还没有被处理（不是outcore），则减少v的度数，并将v（及其新的度数）重新插入优先队列。*/
             int v = to[e];
-            if (outcore[v])
+            if (outcore[v]) /*如果这个邻居顶点已经处理过了，那么就跳过。*/
                 continue;
-            --degree[v]; /*更新因为度数最小的顶点u被删除之后，它的邻居顶点的度数变化*/
-            Q.push(make_pair(-degree[v], v)); /*把度数变化后的邻居顶点再次存入优先级队列Q中，由于Q是优先级队列，所以它会自动的把元素放在正确的位置。*/
+            --degree[v]; /*如果邻居顶点没有处理过，就将这个邻居顶点的度数减去1.*/
+            Q.push(make_pair(-degree[v], v)); /*把度数变化后的邻居顶点再次存入优先级队列Q中，由于Q是优先级队列，所以它会自动的把元素放在正确的位置。
+            注意，每一次从优先队列Q中pop出来的都是当前度数最小的顶点，目的就是为了便于实现退化排序。*/
         }
     }
-    /*现在已经把所有的顶点都已经处理过了，已经计算出来了每个顶点的上界和更新了它们的度数了。*/
+    /*现在已经把所有的顶点都已经处理过了，已经计算出来了每个顶点的上界和更新了它们的度数了。其实每个顶点的upbound就是它的core值。*/
 
     /*初始化一个数组ordID，用于存储顶点的新顺序。*/
     for (int i = 0; i < n; ++i)
         ordID[i] = i;
 
     /*然后根据顶点的up_bound（其实就是core值）来对顶点进行升序排序。*/
-    /*在lambda函数中,它接受两个整数参数x和y, 然后根据自定义的规则进行比较。*/
+    /*在lambda函数中,它接受两个整数参数x和y, 然后根据自定义的规则进行比较。代码的主要逻辑是通过lambda表达式定义一个自定义的比较函数，
+    该函数首先比较两个元素的"up_bound"值，如果这两个值相等，那么就比较这两个元素本身。*/
     sort(ordID, ordID + n, [](const int &x, const int &y) 
          {
          if (up_bound[x] != up_bound[y]) /*如果它们不相等，那么返回值取决于up_bound[x]是否小于up_bound[y]。*/
             return up_bound[x] < up_bound[y];
          return x < y; }); /*如果上述条件不满足，那么按照默认规则对x和y进行比较，即按照从小到大的顺序排列*/
 
-    /*根据升序排序的结果，更新顶点的新编号映射。*/
+    /*根据升序排序的结果，更新顶点的新编号对应于原始图映射。*/
     for (int i = 0; i < n; ++i)
         nV[ordID[i]] = i;
-
+    for (int i = 0; i < n; ++i)
+        printf("%d ",ordID[i]);
+    printf("\n");
+    for (int i = 0; i < n; ++i)
+        printf("%d ",nV[i]); 
     /*重新初始化 degree、head 和 etot，并创建了两个名为 adjN 和 invN 的位集合数组，用于存储邻接关系和逆邻接关系。*/
     memset(degree, 0, n * sizeof(int));
     memset(head, -1, n * sizeof(int));
@@ -719,7 +726,7 @@ void getOrd()
     for (int i = 0; i < M; ++i) /*注意，这里的M在经过preprocess操作之后已经被更新了，现在应该对应着缩减后的边集合。*/
     {
         int u = E[i].first, v = E[i].second; /*从边数组E中获取当前边的两个顶点u和v。*/
-        /*将顶点u和v重新映射为排序后的新编号，nV存储了顶点的新编号映射关系。*/
+        /*将顶点u和v重新映射为退化排序后的新编号，nV存储了顶点的新编号映射关系。*/
         u = nV[u];
         v = nV[v];
         /*增加顶点u和v的度数，表示它们相邻的边数增加了*/
@@ -738,6 +745,7 @@ void getOrd()
         adjN[i].cp(invN[i]); /*复制顶点i的位集合到逆邻接关系invN[i]。注意，这里的复制关系是把adjN复制到invN！*/
         invN[i].flip();      /* 对invN[i]执行翻转操作，将原来为1的位变为0，为0的位变为1，得到顶点i的逆邻接关系*/
     }
+    
     /*初始化并翻转另外两个位集合inD和inG*/
     inD.init(n); /*用init(n)初始化位集合候选集D的大小为n*/
     inD.flip();  /*使用flip()函数对位集合进行翻转，将所有位的值从0变为1，表示初始化为"true"状态。*/
@@ -848,7 +856,7 @@ void bfs(int s)
         for (int e = head[u]; ~e; e = nxt[e]) /*遍历节点 u 的每个邻接节点 v*/
         {
             int v = to[e];
-            if (del[v] || dis[v] != -1) /*如果顶点v没有被删除并且v尚未被访问（dis[v] == -1），则执行以下操作：*/
+            if (del[v] || dis[v] != -1) /*如果顶点v被删除了或者尚已经被访问（dis[v] ！= -1），则跳过当前顶点：*/
                 continue;
             dis[v] = dis[u] + 1; /*设置节点 v 的距离为节点 u 的距离加 1，因为现在的顶点v都是顶点u的1跳邻居，所以它们距离原始顶点u的距离就是1。*/
             que[re++] = v;       /* 计算完1跳邻居后，将节点放入队列以进行后续距离计算的处理。*/
@@ -1199,8 +1207,10 @@ void work() /*核心的函数，调用分支限界方法来求解max s-bundle问
     for (int i = 0; i < 16; ++i)/*初始化一个名为twoPow的数组。该数组的索引表示2的幂，而数组中的元素表示对应的指数。例如，twoPow[1]将被设置为0，twoPow[2]将被设置为1，twoPow[4]将被设置为2，以此类推。
     这个映射关系通常用于处理二进制位操作。这个循环将twoPow数组初始化为一个指数映射表。这个数组的主要目的是让我们快速的找出某个数是2的几次方。*/
         twoPow[1 << i] = i;
+    printf("the value of N before preprocess is %d\n", N); /*注意，这里的N是表示原始图的顶点数目大小！！！*/
     if (!PreProcess(LB + 1)) /*preProcess的主要作用是根据顶点的度数是否符合kplex来进行删点的操作。如果PreProcess返回false（可能表示预处理失败），则调用exit_program函数退出程序。*/
         exit_program();
+    printf("the value of n after preprocess is %d\n", n); /*注意，这里的n表示经过预处理之后的顶点数目大小！！也就是很多不符合要求的顶点被删除掉了！*/
     getOrd();  /*根据退化排序degeneracy ordering来确定顶点的顺序，按照顶点的core值从小到大升序排列，并初始了许多基础的信息，例如度数矩阵、邻接表、邻接位图矩阵等。*/
     dfs(n); /*排完序之后执行深度优先搜索函数，这也是整个代码里面最核心的地方。*/
     exit_program(); /*用于退出程序*/
