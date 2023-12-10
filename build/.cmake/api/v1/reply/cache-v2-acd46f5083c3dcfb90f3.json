@@ -891,7 +891,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "hello"
+			"value" : "LyTest"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1284,6 +1284,42 @@
 			],
 			"type" : "BOOL",
 			"value" : "FALSE"
+		},
+		{
+			"name" : "LyTest_BINARY_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "E:/GitHub/max-s-bundle/build"
+		},
+		{
+			"name" : "LyTest_IS_TOP_LEVEL",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "ON"
+		},
+		{
+			"name" : "LyTest_SOURCE_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "Value Computed by CMake"
+				}
+			],
+			"type" : "STATIC",
+			"value" : "E:/GitHub/max-s-bundle"
 		},
 		{
 			"name" : "MSB_BINARY_DIR",

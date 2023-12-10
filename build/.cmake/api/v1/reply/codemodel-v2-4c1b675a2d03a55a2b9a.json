@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.27"
+						"string" : "3.17"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "hello",
+					"name" : "LyTest",
 					"targetIndexes" : 
 					[
 						0
@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "hello::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-hello-Debug-ea728f8d81ed7150997a.json",
-					"name" : "hello",
+					"id" : "lytest::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-lytest-Debug-ae4e4b505383d9cb28ea.json",
+					"name" : "lytest",
 					"projectIndex" : 0
 				}
 			]

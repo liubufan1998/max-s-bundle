@@ -116,24 +116,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named hello
+# Target rules for targets named lytest
 
 # Build rule for target.
-hello: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 hello
-.PHONY : hello
+lytest: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 lytest
+.PHONY : lytest
 
 # fast build rule for target.
-hello/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hello.dir\build.make CMakeFiles/hello.dir/build
-.PHONY : hello/fast
+lytest/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\lytest.dir\build.make CMakeFiles/lytest.dir/build
+.PHONY : lytest/fast
 
 MSB.obj: MSB.cpp.obj
 .PHONY : MSB.obj
 
 # target to build an object file
 MSB.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hello.dir\build.make CMakeFiles/hello.dir/MSB.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\lytest.dir\build.make CMakeFiles/lytest.dir/MSB.cpp.obj
 .PHONY : MSB.cpp.obj
 
 MSB.i: MSB.cpp.i
@@ -141,7 +141,7 @@ MSB.i: MSB.cpp.i
 
 # target to preprocess a source file
 MSB.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hello.dir\build.make CMakeFiles/hello.dir/MSB.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\lytest.dir\build.make CMakeFiles/lytest.dir/MSB.cpp.i
 .PHONY : MSB.cpp.i
 
 MSB.s: MSB.cpp.s
@@ -149,7 +149,7 @@ MSB.s: MSB.cpp.s
 
 # target to generate assembly for a file
 MSB.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\hello.dir\build.make CMakeFiles/hello.dir/MSB.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\lytest.dir\build.make CMakeFiles/lytest.dir/MSB.cpp.s
 .PHONY : MSB.cpp.s
 
 # Help Target
@@ -160,7 +160,7 @@ help:
 	@echo ... depend
 	@echo ... edit_cache
 	@echo ... rebuild_cache
-	@echo ... hello
+	@echo ... lytest
 	@echo ... MSB.obj
 	@echo ... MSB.i
 	@echo ... MSB.s
