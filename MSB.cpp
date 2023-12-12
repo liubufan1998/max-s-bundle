@@ -459,7 +459,8 @@ public:
 
     /*solve函数是整个求解max s-bundle中的核心函数！！！它主要用于计算顶点连通性以及图的最小割，或者说至少移除多少个顶点会使得当前的图不连通，这是非常重要的一个函数功能。*/
     /*该函数有两种不同的模式，取决于参数 cals 的值。（1）如果 cals 为真，函数用于检查子图 svex 的连通性。（2）如果 cals 为假，函数用于检查整个图的全局连通性。*/
-    bool solve(bool cals, int bound) /*传入的两个参数中，第一个参数是是否计算当前解集svex的连通性；第二个参数是当前的下界bound*/
+    bool solve(bool cals, int bound) /*传入的两个参数中，第一个参数是是否计算当前解集svex的连通性；第二个参数是当前的下界bound。经过漫长的试错，我终于搞懂了这个bound的具体作用！
+    由于我们求解的是max s-bundle问题，而s-bundle指的是最少移除|V|-s个顶点后图不连通，而这个bound就是指的|V|-s，所以和s-bundle中的s相关的参数就体现在solve函数的bound参数中。*/
     {
         int nn = 0; /*定义并初始化一个局部变量 nn，用于跟踪数组 nV 和 oID 的填充情况。*/
         if (cals)   /*如果 cals 为真，则计算当前解集svex的连通性*/
@@ -483,7 +484,7 @@ public:
             {
                 if (i == u || adjN[oID[u]].test(oID[i])) /*如果该顶点是顶点 u自身，或者u与i邻接*/
                     continue; /*则跳过这一次循环。*/
-                if (mf.SAP(u + nn, i) < bound) /*如果结果小于 bound，则返回 false，表示无法达到给定的顶点连通性。注意，这里调用了SAP算法。*/
+                if (mf.SAP(u + nn, i) < bound) /*如果结果小于 bound，则返回 false，表示无法达到给定的顶点连通性。注意，这里调用了SAP算法。u+nn表示反向流量。*/
                     return false;
             }
             return true; /*如果所有测试都通过，返回 true，表示图至少具有bound的顶点连通性。*/
@@ -990,7 +991,7 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
     /*如果最小度数的顶点的度数大于等于 curS - K，则调用 dfs_kbundle 函数并返回。注意了，后面的dfs会一直执行到满足这个if条件为止，因为dfs_kbundle是最核心的分支方法，这也是建立
     在kplex的基础上的。也就是说，一个s-bundle一定先得是一个s-plex，其次再从这些s-plex里面提取出一个合格的s-bundle。*/
     if (degree[minID] >= curS - K) /*这里就验证了当前的顶点集合是一个kplex，这也就满足了当前的图是一个s-bundle的前置条件。*/
-    {
+    {   /*其实这里的思想和我想要实现的思想差不多，就是先验证是不是kplex，然后再进一步判断是不是s-bundle。因为验证是否是kplex要简单许多。*/
         dfs_kbundle(curS, true); /*在调用这个函数时所传入的参数：第一个表示当前的顶点集合大小；第二个表示check标致置为真。*/
         return;
     }
