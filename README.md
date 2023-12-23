@@ -1,7 +1,7 @@
 # max-s-bundle
 
 关于这个程序的编译方式
-g++ -o2 .\MSB.cpp -o -name
+g++ -o2 .\MSB.cpp -o MSBliuyang
 
 关于这个程序的调用方式
 

@@ -1,3 +1,0 @@
-"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\MSB.dir/objects.a
-"E:\application 2\x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0\mingw64\bin\ar.exe" qc CMakeFiles\MSB.dir/objects.a @CMakeFiles\MSB.dir\objects1.rsp
-"E:\application 2\x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0\mingw64\bin\g++.exe" -g -Wl,--whole-archive CMakeFiles\MSB.dir/objects.a -Wl,--no-whole-archive -o E:\GitHub\max-s-bundle\bin\MSB.exe -Wl,--out-implib,E:\GitHub\max-s-bundle\lib\libMSB.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\MSB.dir\linkLibs.rsp

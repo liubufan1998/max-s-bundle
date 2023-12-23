@@ -112,7 +112,7 @@ CMAKE_FIND_PACKAGE_REDIRECTS_DIR:STATIC=E:/GitHub/max-s-bundle/build/CMakeFiles/
 CMAKE_GNUtoMS:BOOL=OFF
 
 //Install path prefix, prepended onto install directories.
-CMAKE_INSTALL_PREFIX:PATH=C:/Program Files (x86)/MSBly001
+CMAKE_INSTALL_PREFIX:PATH=C:/Program Files (x86)/LyTest
 
 //Path to a program.
 CMAKE_LINKER:FILEPATH=E:/application 2/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0/mingw64/bin/ld.exe
@@ -249,33 +249,6 @@ LyTest_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 LyTest_SOURCE_DIR:STATIC=E:/GitHub/max-s-bundle
-
-//Value Computed by CMake
-MSB_BINARY_DIR:STATIC=E:/GitHub/max-s-bundle/build
-
-//Value Computed by CMake
-MSB_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-MSB_SOURCE_DIR:STATIC=E:/GitHub/max-s-bundle
-
-//Value Computed by CMake
-MSBly001_BINARY_DIR:STATIC=E:/GitHub/max-s-bundle/build
-
-//Value Computed by CMake
-MSBly001_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-MSBly001_SOURCE_DIR:STATIC=E:/GitHub/max-s-bundle
-
-//Value Computed by CMake
-hello_BINARY_DIR:STATIC=E:/GitHub/max-s-bundle/build
-
-//Value Computed by CMake
-hello_IS_TOP_LEVEL:STATIC=ON
-
-//Value Computed by CMake
-hello_SOURCE_DIR:STATIC=E:/GitHub/max-s-bundle
 
 
 ########################

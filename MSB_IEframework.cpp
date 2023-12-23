@@ -3,7 +3,7 @@
 using namespace std;
 typedef long long ll;
 const int TIME_LIM = 3600;
-/*这个文件主要是我自己进行一些修改！*/
+
 int N, M, K, wG;
 pair<int, int> *E;
 
@@ -457,16 +457,17 @@ public:
         oID = new int[n];
     }
 
-    /*solve函数是整个求解max s-bundle中的核心函数！！！它主要用于计算顶点连通性，或者说至少移除多少个顶点会使得当前的图不连通，这是非常重要的一个函数功能。*/
+    /*solve函数是整个求解max s-bundle中的核心函数！！！它主要用于计算顶点连通性以及图的最小割，或者说至少移除多少个顶点会使得当前的图不连通，这是非常重要的一个函数功能。*/
     /*该函数有两种不同的模式，取决于参数 cals 的值。（1）如果 cals 为真，函数用于检查子图 svex 的连通性。（2）如果 cals 为假，函数用于检查整个图的全局连通性。*/
-    bool solve(bool cals, int bound) /*传入的两个参数中，第一个参数是是否计算当前解集svex的连通性；第二个参数是当前的下界bound*/
+    bool solve(bool cals, int bound) /*传入的两个参数中，第一个参数是是否计算当前解集svex的连通性；第二个参数是当前的下界bound。经过漫长的试错，我终于搞懂了这个bound的具体作用！
+    由于我们求解的是max s-bundle问题，而s-bundle指的是最少移除|V|-s个顶点后图不连通，而这个bound就是指的|V|-s，所以和s-bundle中的s相关的参数就体现在solve函数的bound参数中。*/
     {
-        int nn = 0; /*定义并初始化一个局部变量 nn，可能用于跟踪数组 nV 和 oID 的填充情况。*/
+        int nn = 0; /*定义并初始化一个局部变量 nn，用于跟踪数组 nV 和 oID 的填充情况。*/
         if (cals)   /*如果 cals 为真，则计算当前解集svex的连通性*/
         {
             for (auto u : svex)
                 nV[u] = nn, oID[nn++] = u;        /*，并在 nV 中设置新的编号，同时在 oID 中保持其原始编号。这里类似于常老师写的代码。*/
-            mf.init(nn + nn);                     /*初始化 mf 对象，初始化网络流的图结构，参数 nn + nn 表示了在一个流网络中的双向边。*/
+            mf.init(nn + nn);                     /*初始化 mf(max flow)对象，初始化网络流的图结构，参数 nn + nn 表示在一个流网络中的双向边。*/
             for (auto u : svex)                   /*遍历 svex 中的每个顶点，*/
                 mf.addedge(nV[u], nV[u] + nn, 1); /*这里是添加正向边，添加从顶点到其对应超级汇点的边，边的容量设置为 1。*/
             for (auto u : svex)
@@ -483,7 +484,7 @@ public:
             {
                 if (i == u || adjN[oID[u]].test(oID[i])) /*如果该顶点是顶点 u自身，或者u与i邻接*/
                     continue; /*则跳过这一次循环。*/
-                if (mf.SAP(u + nn, i) < bound) /*如果结果小于 bound，则返回 false，表示无法达到给定的顶点连通性。注意，这里调用了SAP算法。*/
+                if (mf.SAP(u + nn, i) < bound) /*如果结果小于 bound，则返回 false，表示无法达到给定的顶点连通性。注意，这里调用了SAP算法。u+nn表示反向流量。*/
                     return false;
             }
             return true; /*如果所有测试都通过，返回 true，表示图至少具有bound的顶点连通性。*/
@@ -537,8 +538,8 @@ inline void addedge(int *h, int v) /*它接受两个参数，一个是指向顶�
     *h = etot++;  /*更新头指针 *h 的值为当前边的索引 etot，然后 etot 自增，为下一次添加边做准备。etot 是全局变量，用于追踪邻接表中边的总数。*/
 }
 
-/*PreProcess 函数用于对图进行预处理，以便减小要处理的图的大小。PS：这里所采用的预处理方法实在是太过于简易了，仅仅根据顶点的度数进行了预处理，*/
-bool PreProcess(int S)
+
+bool PreProcess(int S) /*PreProcess 函数用于对图进行预处理，以便减小要处理的图的大小。PS：这里所采用的预处理方法实在是太过于简易了，仅仅根据顶点的度数进行了预处理，*/
 {
     /*根据我从下面的代码中来看，这里面的预处理部分仅仅使用了对于顶点度数的判断来筛选顶点*/
 
@@ -565,10 +566,8 @@ bool PreProcess(int S)
         addedge(head + v, u); /*head + u 和 head + v 分别代表顶点 u 和 v 的邻接链表头部的位置。*/
     }
     memset(outcore, 0, N * sizeof(bool)); /*初始化 outcore 数组，用于标记顶点是否满足某些条件*/
-    int fr = 0, re = 0;  /*队列用于宽度优先搜索，fr 代表队列的头部，re 代表队列的尾部。*/
-
-    /*根据顶点度数将不符合要求的顶点筛选出来。*/
-    for (int i = 0; i < N; ++i)
+    int fr = 0, re = 0;  /*队列用于宽度优先搜索，fr 代表队列的头部，re 代表队列的尾部。*/  
+    for (int i = 0; i < N; ++i)/*根据顶点度数将不符合要求的顶点筛选出来。*/
         if (degree[i] < S - K) /*遍历每个顶点，如果它的度数小于 S - K，则将该顶点加入队列，并在 outcore 中标记为 true。这里利用的就是kplex的性质来处理的。*/
             que[re++] = i, outcore[i] = true; /*再次验证了outcore里面的顶点*/
     /*用异或运算来检查队列是否为空，开始进行宽度优先搜索。*/
@@ -644,14 +643,13 @@ void getOrd()
     push() 加入一个元素 ；
     size() 返回优先队列中拥有的元素的个数； 
     top() 返回优先队列中有最高优先级的元素。 */
-
-    memset(outcore, 0, n * sizeof(bool));     /*outcore用来标记顶点是否符合kplex的基本度数要求。*/
+    memset(outcore, 0, n * sizeof(bool));     /*outcore用来标记顶点是否符合kplex的基本度数要求，其实它就是一种变了形式的visited数组，只不过这里强调了它的度数概念。*/
 
     /*将所有顶点按度数的降序放入优先队列。*/
     for (int i = 0; i < n; ++i)
         Q.push(make_pair(-degree[i], i));
     /*这段代码是在一个循环中，将每个顶点按照其度数（degree）加入了一个优先队列（Priority Queue）Q 中，
-    同时使用负数形式将度数变为负数，这是因为默认的优先队列是按照元素值的升序排列，而我们希望将度数最大的顶点排在队列的前面，因此将度数取负数来实现降序排列。
+    同时使用负数形式将度数变为负数，这是因为默认的优先队列是按照元素值的升序排列，而我们希望将度数最小的顶点排在队列的前面，因此将度数取负数来实现降序排列。
     在默认的优先队列中，较大的数优先出列。但是我们想要实现退化排序，所以我们加了一个符号，从而可以使得度数最小的顶点优先出列。*/
 
     /*接下来进行退化排序！！首先是不断的删除当前所有顶点中顶点度数最小的顶点*/
@@ -665,7 +663,7 @@ void getOrd()
         /*如果顶点u已经不符合顶点的度数要求了，则跳过它。*/
         if (outcore[u])
             continue;
-        outcore[u] = true; /*否则将这个顶点标记为已经处理过一次了，防止后面重复处理。*/
+        outcore[u] = true; /*将这个顶点标记为已经处理过一次了，防止后面重复处理。*/
         /*接下来设置每一个顶点的上界。*/
         if (degree[u] < curB - K) /*如果顶点u在当前顶点数量下都不符合kplex的要求，那么就把它的上界设为当前的下界curB*/
         {
@@ -676,41 +674,35 @@ void getOrd()
             curB = degree[u] + K + 1; /*否则，更新curB为degree[u] + K + 1*/
             up_bound[u] = curB;       /*并将u的上界设置为新的curB。*/
         }
-        /*遍历顶点u的所有邻居。*/
+        /*记录完刚刚弹出来的最小度数的顶点后，现在就要把该顶点给删除，并更新顶点u的所有邻居的度数，减1。*/
         for (int e = head[u]; ~e; e = nxt[e])
         {
             /*对于每个邻居顶点v，如果v还没有被处理（不是outcore），则减少v的度数，并将v（及其新的度数）重新插入优先队列。*/
             int v = to[e];
-            if (outcore[v]) /*如果这个邻居顶点已经处理过了，那么就跳过。*/
+            if (outcore[v])
                 continue;
-            --degree[v]; /*如果邻居顶点没有处理过，就将这个邻居顶点的度数减去1.*/
-            Q.push(make_pair(-degree[v], v)); /*把度数变化后的邻居顶点再次存入优先级队列Q中，由于Q是优先级队列，所以它会自动的把元素放在正确的位置。
-            注意，每一次从优先队列Q中pop出来的都是当前度数最小的顶点，目的就是为了便于实现退化排序。*/
+            --degree[v]; /*更新因为度数最小的顶点u被删除之后，它的邻居顶点的度数变化*/
+            Q.push(make_pair(-degree[v], v)); /*把度数变化后的邻居顶点再次存入优先级队列Q中，由于Q是优先级队列，所以它会自动的把元素放在正确的位置。*/
         }
     }
-    /*现在已经把所有的顶点都已经处理过了，已经计算出来了每个顶点的上界和更新了它们的度数了。其实每个顶点的upbound就是它的core值。*/
+    /*现在已经把所有的顶点都已经处理过了，已经计算出来了每个顶点的上界和更新了它们的度数了。*/
 
     /*初始化一个数组ordID，用于存储顶点的新顺序。*/
     for (int i = 0; i < n; ++i)
         ordID[i] = i;
 
     /*然后根据顶点的up_bound（其实就是core值）来对顶点进行升序排序。*/
-    /*在lambda函数中,它接受两个整数参数x和y, 然后根据自定义的规则进行比较。代码的主要逻辑是通过lambda表达式定义一个自定义的比较函数，
-    该函数首先比较两个元素的"up_bound"值，如果这两个值相等，那么就比较这两个元素本身。*/
+    /*在lambda函数中,它接受两个整数参数x和y, 然后根据自定义的规则进行比较。*/
     sort(ordID, ordID + n, [](const int &x, const int &y) 
          {
          if (up_bound[x] != up_bound[y]) /*如果它们不相等，那么返回值取决于up_bound[x]是否小于up_bound[y]。*/
             return up_bound[x] < up_bound[y];
-         return x < y; }); /*如果上述条件不满足，那么按照默认规则对x和y进行比较，即按照从小到大的顺序排列*/
+         return x < y; }); /*如果两个顶点具有相同的upper_bound值，那么按照顶点编号顺序从小到大进行排列。*/
 
-    /*根据升序排序的结果，更新顶点的新编号对应于原始图映射。*/
+    /*根据升序排序的结果，更新顶点的新编号映射。*/
     for (int i = 0; i < n; ++i)
         nV[ordID[i]] = i;
-    for (int i = 0; i < n; ++i)
-        printf("%d ",ordID[i]);
-    printf("\n");
-    for (int i = 0; i < n; ++i)
-        printf("%d ",nV[i]); 
+
     /*重新初始化 degree、head 和 etot，并创建了两个名为 adjN 和 invN 的位集合数组，用于存储邻接关系和逆邻接关系。*/
     memset(degree, 0, n * sizeof(int));
     memset(head, -1, n * sizeof(int));
@@ -726,7 +718,7 @@ void getOrd()
     for (int i = 0; i < M; ++i) /*注意，这里的M在经过preprocess操作之后已经被更新了，现在应该对应着缩减后的边集合。*/
     {
         int u = E[i].first, v = E[i].second; /*从边数组E中获取当前边的两个顶点u和v。*/
-        /*将顶点u和v重新映射为退化排序后的新编号，nV存储了顶点的新编号映射关系。*/
+        /*将顶点u和v重新映射为排序后的新编号，nV存储了顶点的新编号映射关系。*/
         u = nV[u];
         v = nV[v];
         /*增加顶点u和v的度数，表示它们相邻的边数增加了*/
@@ -745,7 +737,6 @@ void getOrd()
         adjN[i].cp(invN[i]); /*复制顶点i的位集合到逆邻接关系invN[i]。注意，这里的复制关系是把adjN复制到invN！*/
         invN[i].flip();      /* 对invN[i]执行翻转操作，将原来为1的位变为0，为0的位变为1，得到顶点i的逆邻接关系*/
     }
-    
     /*初始化并翻转另外两个位集合inD和inG*/
     inD.init(n); /*用init(n)初始化位集合候选集D的大小为n*/
     inD.flip();  /*使用flip()函数对位集合进行翻转，将所有位的值从0变为1，表示初始化为"true"状态。*/
@@ -761,10 +752,10 @@ int LB;
 
 void exit_program() /*退出程序的时候打印信息：（1）文件的名称filename；（2）s-bundle的s的值K；（3）深度优先搜索经历过的顶点数量dfs_node；（4）我们传入的s-bundle的下界LB；（5）算法运行所消耗的时间。*/
 {
-    printf("Filename: %s\n", filename);
-    printf("Value of K: %d\n", K);
+    printf("Your input filename: %s\n", filename);
+    printf("The value of s-bundle, s is: %d\n", K);
     printf("Search nodes: %lld\n", dfs_node);
-    printf("Lower bound: %d\n", LB);
+    printf("The size of the max s-bundle is: %d\n", LB);
     printf("Used Time: %.10f s\n", (double)(clock() - startTime) / CLOCKS_PER_SEC);
     // printf("The obtained solution is: %d\n",);
     // for(int i = 0; i < n; i++){
@@ -820,7 +811,7 @@ inline void addtoS(int u)
     }
 }
 
-/*bool canadd(int u) 函数是用于检查是否可以将节点 u 添加到当前的 svex 集合中，而不违反算法的约束条件。判断包括两个部分，第一是判断是不是一个kplex，第二则是判断是否连通。*/
+/*bool canadd(int u) 函数是用于检查是否可以将节点 u 添加到当前的 svex 集合中，而不违反算法的约束条件。判断包括两个部分，第一是判断是不是一个kplex，第二则是判断是否连通且最大流是否满足条件。*/
 inline bool canadd(int u)
 {
     int tot = 0; /*初始化一个计数器 tot，用于计算节点 u 与当前 svex 集合中的节点不相邻的数量。*/
@@ -836,7 +827,7 @@ inline bool canadd(int u)
     /*如果前面没有问题，那么就可以把这个顶点暂时加到我们的解集svex中。*/
     svex.push_back(u); /*将节点 u 添加到 svex 集合中*/
 
-    /*暂时加入了顶点u之后我们还要进一步的判断这个图是不是一个连通图，调用solve方法，设置标记为true，表示只看svex的连通性。*/
+    /*暂时加入了顶点u之后我们还要进一步的判断这个图是不是一个连通图，调用solve方法，设置标记为true，表示只看svex的连通性，同时计算svex的最小割。*/
     bool ret = vc.solve(true, svex.size() - K);
 
     svex.pop_back(); /*将节点 u 从 svex 集合中移除。这是因为这个函数的目的仅仅是判断顶点u能不能被加入到我们的解集中，而不是真正的添加。真的添加还在其他的操作中。*/
@@ -856,7 +847,7 @@ void bfs(int s)
         for (int e = head[u]; ~e; e = nxt[e]) /*遍历节点 u 的每个邻接节点 v*/
         {
             int v = to[e];
-            if (del[v] || dis[v] != -1) /*如果顶点v被删除了或者尚已经被访问（dis[v] ！= -1），则跳过当前顶点：*/
+            if (del[v] || dis[v] != -1) /*如果顶点v没有被删除并且v尚未被访问（dis[v] == -1），则执行以下操作：*/
                 continue;
             dis[v] = dis[u] + 1; /*设置节点 v 的距离为节点 u 的距离加 1，因为现在的顶点v都是顶点u的1跳邻居，所以它们距离原始顶点u的距离就是1。*/
             que[re++] = v;       /* 计算完1跳邻居后，将节点放入队列以进行后续距离计算的处理。*/
@@ -903,14 +894,13 @@ void get_color(vector<pair<int, int>> &lst) /*这个传入了参数的get color�
 也就是说这个函数专门针对于候选集里面的顶点集合进行图着色上界的的计算。*/
 {
     BIT_SET Q, P; /*初始化 BIT_SET 对象并拷贝状态*/
-    inD.cp(P); /*把inD拷贝到刚刚创建的集合P中。注意，inD表示在删除集合中。*/
+    inD.cp(P); /*把inD拷贝到刚刚创建的集合P中。注意，inD表示在候选集合中。*/
     int tot = 0; /*total的意思就是指当前的图的集合能够获得的基于染色的最大上界。*/
     while (!P.empty())  /*循环处理直至P为空，其中P是inD的副本，表示删除顶点集合。*/
     { /*P.empty() 检查 P 是否没有任何设置的位。*/
         int cnt = 0;
-        P.cp(Q); /*在每一次循环中，把位集合P中的内容复制到集合Q中。*/
-        /*在 Q 中进行操作并更新 lst*/
-        do
+        P.cp(Q); /*在每一次循环中，把位集合P中的内容复制到集合Q中。*/ 
+        do/*在 Q 中进行操作并更新 lst*/
         {
             /*在一个 do-while 循环中，Q.lowbit() 获取 Q 中最低的设置位的位置，并赋值给 u。
             cnt 用于计数，如果超过某个阈值 K，则将 cnt 设置为 K。
@@ -975,8 +965,7 @@ void dfs_kbundle(int curS, bool check) /*第一个参数表示当前的顶点集
         check = true; /*再次把check标志置为真，表示下一次调用solve的时候只需要检查当前解集svex是否连通就行了。*/
         delfrD(lst[i].first); /*把已经处理过的该顶点从候选集中删掉。*******我现在开始觉得这个集合D是候选集了。*/
     }
-    /*循环结束后，重新把lst集合中的所有元素放回到候选集合中去*/
-    for (int i = 0; i < m; ++i)
+    for (int i = 0; i < m; ++i)/*循环结束后，重新把lst集合中的所有元素放回到候选集合中去*/
         addtoD(lst[i].first);
 }
 
@@ -989,33 +978,33 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
     LB = max(LB, (int)svex.size()); /*更新当前的下界，其中svex是当前的解s-bundle。*/
     if (curS <= LB) /*递归的终止条件！！*/
         return; /*如果 curS（当前解）小于等于 LB，则函数返回，停止进一步搜索。*/
-
-    /*找出当前顶点度数最小的未删除顶点。*/
-    int minID = -1;
+    int minID = -1; /*找出当前顶点度数最小的未删除顶点。*/
     for (int i = 0; i < n; ++i)
         if (!del[i])
         {
             if (minID == -1 || degree[i] < degree[minID])
                 minID = i;
         }
-
-    /*如果最小度数的顶点的度数大于等于 curS - K，则调用 dfs_kbundle 函数并返回。*/
+    /*如果最小度数的顶点的度数大于等于 curS - K，则调用 dfs_kbundle 函数并返回。注意了，后面的dfs会一直执行到满足这个if条件为止，因为dfs_kbundle是最核心的分支方法，这也是建立
+    在kplex的基础上的。也就是说，一个s-bundle一定先得是一个s-plex，其次再从这些s-plex里面提取出一个合格的s-bundle。*/
     if (degree[minID] >= curS - K) /*这里就验证了当前的顶点集合是一个kplex，这也就满足了当前的图是一个s-bundle的前置条件。*/
-    {
+    {   /*其实这里的思想和我想要实现的思想差不多，就是先验证是不是kplex，然后再进一步判断是不是s-bundle。因为验证是否是kplex要简单许多。*/
         dfs_kbundle(curS, true); /*在调用这个函数时所传入的参数：第一个表示当前的顶点集合大小；第二个表示check标致置为真。*/
         return;
     }
     /*假如最小度数的顶点不符合kplex的度数要求，那么执行下面的操作。*/
     if (degree[minID] < LB + 1 - K) /*如果该最小度数的顶点甚至比不上我们已经得到的下界LB所构成的kplex，那么这个顶点就符合reduction条件，可以被删去。*/
     {  
-        if (ins[minID]) /*如果最小度数顶点已经被插入了解集S中，那么就说明当前解集S不是我们要找的最大s-bundle，因为它甚至都不是一个kplex。*/
+        if (ins[minID]) /*如果最小度数顶点已经被插入了解集S中，那么就说明当前解集S不是我们要找的最大s-bundle，因为它甚至都不是一个kplex，这时候可以提前终止该分支的搜索。*/
             return;
         delfrD(minID); /*如果该最小度数顶点没有在解集S中，那么就从候选集中删除该最小度数顶点minID。*/
-        dfs(curS - 1); /*递归进一步的进行，因为已经确保处理了一个顶点。递归地调用dfs函数，减少当前解的大小。*/
+        dfs(curS - 1); /*递归进一步的进行，因为已经确保处理了一个顶点。递归地调用dfs函数，减少当前解的大小。根据dfs函数前面的终止条件：如果在将度数最小的顶点删除后的图里面
+        没有能找到比LB更优的解，那么就会终止这个递归子算法。当所有的子算法里面的递归都消失了后，我们就可以终止我们最外面的递归，得到我们在递归过程中所得到的答案了。*/
         addtoD(minID); /* 如果没能在上面一行的dfs中找到令人满意的解，那么又将该最小度数顶点minID重新添加到候选集中*/
         /*需要说明的是，在递归函数里面，并不是说一个return就会终止整个函数！而是return会不断的把值往回抛！但是直到满足递归终止条件的时候才会结束算法！！！*/
         return;
     }
+    /*经过前面的代码后，现在的minID的顶点度数既不符合kplex的要求，但是也不比LB+1-K小。那么就执行另外一种情况。*/
     /*寻找和处理另一个特定条件的顶点, 这次是寻找未被删除的度数最大的顶点*/
     int maxID = -1; /*初始化一个变量maxID，用于存储度数最大的未删除顶点的编号。*/
     for (int i = 0; i < n; ++i)
@@ -1024,7 +1013,7 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
             if (maxID == -1 || notadj[i] > notadj[maxID]) /* 判断是否需要更新当前度数最大的顶点的编号*/
                 maxID = i;   /*更新maxID为i*/
         }
-    /*处理 maxID 对应的顶点*/
+    /*处理 maxID 对应的度数最大的顶点*/
     /*第一种情况：当前度数最大的顶点没有在解集S中，并且它的度数不符合kplex的要求。*/
     if (!ins[maxID] && notadj[maxID] >= K) /*如果最大度数的顶点maxID没有被插入到解集S中并且与 maxID 不相邻的顶点数量大于等于 K（说明不符合基本的kplex的要求）*/
     {
@@ -1034,22 +1023,22 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
         return;
         /*这一段代码的目的是考虑了一种情况，即顶点maxID可以被删除以获得更优解的可能性*/
     }
-    /*第二种情况：当前度数最大的顶点已经在解集S中，并且它的度数已经快要不满足kplex的要求了。*/
+    /*第二种情况：当前度数最大的顶点已经在解集S中，并且它的度数已经快要不满足kplex的要求了。这里对应着论文中原文的3.4部分的Reduction，属于饱和顶点。*/
     if (ins[maxID] && notadj[maxID] >= K - 1) /*检查顶点maxID是否已经被插入（已被标记为已插入）且与顶点maxID不相邻的顶点数量是否大于等于K - 1*/
     {
         /*如果与顶点maxID不相邻的顶点数量大于等于K，说明它不符合kplex的基本要求，则直接返回，不再继续搜索。*/
-        if (notadj[maxID] >= K) 
+        if (notadj[maxID] >= K) /*这个if语句不同于前面的第一种情况，因为这里是表示顶点maxID已经被插入到了已选集中的。*/
             return;
         /*如果在这里没有返回，那么就说明这个maxID是一个饱和顶点！！！它已经濒临被剔除的边缘了！！*/
         vector<int> todel; /*创建一个空的整数向量用于存储待删除的顶点*/
         for (int i = 0; i < n; ++i)
-            if (!del[i] && !ins[i] && !adjN[maxID].test(i)) /*如果顶点i未被删除、未被插入，并且与顶点maxID不相邻。*/
+            if (!del[i] && !ins[i] && !adjN[maxID].test(i)) /*如果顶点i未被删除、未被插入（也就是说是候选集中的顶点），并且与顶点maxID不相邻。*/
             {
-                todel.push_back(i); /*如果条件满足，那么将顶点i添加到待删除的顶点列表中。因为这样子的顶点已经不符合kplex的定义了！它们缺失的邻居顶点数目已经达到了k个了！*/
+                todel.push_back(i); /*如果条件满足，那么将顶点i添加到待删除的顶点列表中。因为这些顶点已经不能再加入到有maxID在的解集里面去了！它们缺失的邻居顶点数目已经达到了k个了！*/
             }
         if (todel.size()) /*如果待删除的顶点列表中有顶点*/
         {
-            for (auto x : todel) /*遍历待删除的顶点列表，并依次从候选集中删除这些顶点*/
+            for (auto x : todel) /*遍历待删除的顶点列表，并从候选集中全部删除这些顶点*/
                 delfrD(x);
             dfs(curS - todel.size()); /*递归地调用dfs函数，减少当前待搜索空间的大小。到了这里我们不难发现，dfs越往后面会越来越小，也就越来越容易找到解。*/
             for (auto x : todel) /*如果前面的dfs没有能找到更大的s-bundle，那么我们再把刚刚从候选集中删除掉的顶点再依次加回候选集中去。*/
@@ -1065,7 +1054,7 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
         int u = svex[rand() % svex.size()]; /*如果 svex 非空，代码随机选择 svex 中的一个顶点 u。选择是通过 rand() % svex.size() 实现的，这会生成一个介于 0 和 svex.size() - 1 之间的随机索引。*/
         bfs(u);   /*对随机选中的顶点 u 执行广度优先搜索 (BFS)。在bfs中会把顶点u的相关距离进行初始化，存放在dis数组中。*/
         /*下面的循环遍历图中的所有顶点 v，收集那些未被删除且满足特定条件的顶点。条件是顶点 v 要么在 BFS 中未被访问过（dis[v] == -1），
-        要么其距离超过了某个阈值（dis[v] > max(2, K + K - LB)）。这个阈值可能与图的某些性质有关。 如果顶点 v 已经被插入 (ins[v] 为真)，则函数提前返回。*/
+        要么其距离超过了某个阈值（dis[v] > max(2, K + K - LB)）。这个阈值用于图的约简。 如果顶点 v 已经被插入 (ins[v] 为真)，则函数提前返回。*/
         for (int v = 0; v < n; ++v) /*遍历当前所有的顶点*/
             if (!del[v]) /*如果顶点v未被删除*/
             {
@@ -1078,7 +1067,7 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
                     push_back的主要作用是在vector的尾部添加一个新的元素。*/
                 }
             }
-        if (sofar.size()) /*如果存放距离不符合的顶点的sofar数组不为空*/
+        if (sofar.size()) /*如果存放距离不符合的顶点的sofar数组不为空，那么就把这些不合格的顶点们都删掉， 然后再进行深度优先递归搜索。*/
         {
             for (auto x : sofar)
                 delfrD(x);  /*将sofar数组中所有的顶点从候选集中删除。*/
@@ -1133,7 +1122,8 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
         }
         /*因为在上面的循环中，并没有对canselect里面的最后一个顶点进行判断，所以下面单独把这个特殊位置的顶点拉出来处理。
         其实这里就是对应着多分支规则的最后一个分支！！！即把最小度数顶点所有允许的可加入非邻居都剔除掉的那个分支！*/
-        if (all && (canselect == 0 || canadd(branch[canselect - 1]))) /*如果canselect集合中所有顶点都没有产生冲突，同时要么canselect为0，要么能够添加branch中最后一个顶点*/
+        if (all && (canselect == 0 || canadd(branch[canselect - 1]))) /*如果canselect集合中所有顶点都没有产生冲突，同时要么canselect为0（意味着没有不相邻的顶点可以被用来分支）
+        ，要么能够添加branch中最后一个顶点*/
         {
             for (int i = canselect; i < (int)branch.size(); ++i) /*循环从canselect位置开始，遍历branch中除了canselect后面的剩余顶点。根据分支规则，这些顶点都是要被删掉的。*/
                 delfrD(branch[i]);                               /*将这些剩余顶点从候选集中删除。*/
@@ -1176,7 +1166,7 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
                 pos = i - 1;
             }
             dfs(curS - 1);     /*递归地调用dfs函数，更新搜索深度，相当于在假设这些顶点都已插入的情况下继续搜索。*/
-            addtoD(branch[i]); /*最后，将当前顶点重新添加到候选集中，即标记为未删除。*/
+            addtoD(branch[i]); /*最后，将当前顶点重新添加到候选集中，即标记为未删除，方便其他的分支使用。*/
         }
         /*因为在上面的循环中，并没有对canselect里面的最后一个顶点进行判断，所以下面单独把这个特殊位置的顶点拉出来处理。
         其实这里就是对应着多分支规则的最后一个分支！！！即把最小度数顶点所有允许的可加入非邻居都剔除掉的那个分支！*/
@@ -1202,15 +1192,13 @@ void work() /*核心的函数，调用分支限界方法来求解max s-bundle问
 {
     srand(time(NULL));/*初始化随机数生成器的种子为当前时间。这通常用于确保每次程序运行时产生的随机数序列都是不同的。*/
     startTime = clock(); /*记录函数开始执行时的处理器时钟，这用于计算程序执行的时间。*/
-    dfs_node = 0;/*初始化dfs_node变量，这可能用于跟踪在深度优先搜索（DFS）中访问的节点数量。*/ 
+    dfs_node = 0;/*初始化dfs_node变量，用于跟踪在深度优先搜索（DFS）中访问的节点数量。*/ 
     LB = max(wG, K); /*设置变量LB（可能代表下界 Lower Bound）为变量wG和K的最大值。这样设置的原因是s-bundle的最起码大小要为s，也就是这里的K。我感觉这个作者写的代码太烂了，远远不如常老师、师弟和开强的代码质量，后面我要好好的重构。*/    
     for (int i = 0; i < 16; ++i)/*初始化一个名为twoPow的数组。该数组的索引表示2的幂，而数组中的元素表示对应的指数。例如，twoPow[1]将被设置为0，twoPow[2]将被设置为1，twoPow[4]将被设置为2，以此类推。
     这个映射关系通常用于处理二进制位操作。这个循环将twoPow数组初始化为一个指数映射表。这个数组的主要目的是让我们快速的找出某个数是2的几次方。*/
         twoPow[1 << i] = i;
-    printf("the value of N before preprocess is %d\n", N); /*注意，这里的N是表示原始图的顶点数目大小！！！*/
     if (!PreProcess(LB + 1)) /*preProcess的主要作用是根据顶点的度数是否符合kplex来进行删点的操作。如果PreProcess返回false（可能表示预处理失败），则调用exit_program函数退出程序。*/
         exit_program();
-    printf("the value of n after preprocess is %d\n", n); /*注意，这里的n表示经过预处理之后的顶点数目大小！！也就是很多不符合要求的顶点被删除掉了！*/
     getOrd();  /*根据退化排序degeneracy ordering来确定顶点的顺序，按照顶点的core值从小到大升序排列，并初始了许多基础的信息，例如度数矩阵、邻接表、邻接位图矩阵等。*/
     dfs(n); /*排完序之后执行深度优先搜索函数，这也是整个代码里面最核心的地方。*/
     exit_program(); /*用于退出程序*/
@@ -1248,6 +1236,7 @@ int main(int argc, char **argv)
     /*这些行从命令行参数中读取整数值，并将它们存储在变量K和wG中。*/
     sscanf(argv[2], "%d", &K);  /*读取s-bundle中的s值*/
     sscanf(argv[3], "%d", &wG); /*读取下界*/
+
     MAIN();
     return 0;
 }

@@ -1,7 +1,7 @@
 [
 {
   "directory": "E:/GitHub/max-s-bundle/build",
-  "command": "\"E:\\application 2\\x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0\\mingw64\\bin\\g++.exe\"   -g -std=gnu++14 -O2 -o CMakeFiles\\lytest.dir\\MSB.cpp.obj -c E:\\GitHub\\max-s-bundle\\MSB.cpp",
+  "command": "\"E:\\application 2\\x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0\\mingw64\\bin\\g++.exe\"   -g -std=gnu++11 -O2 -o CMakeFiles\\lytest.dir\\MSB.cpp.obj -c E:\\GitHub\\max-s-bundle\\MSB.cpp",
   "file": "E:/GitHub/max-s-bundle/MSB.cpp",
   "output": "CMakeFiles/lytest.dir/MSB.cpp.obj"
 }

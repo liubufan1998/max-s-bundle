@@ -101,7 +101,7 @@ inline int find_id(int u)
 
 /*这段代码的主要功能是从文本文件中读取图的信息，包括顶点数和边数，然后解析每条边的信息，将有效的边存储在E数组中。同时，它还处理自环边和重复边，并且在需要时对顶点进行重新编号。
 注意，我已经按照我想要的数据格式进行了相应的读取修改，把一些不需要的跨行注释掉了。*/
-void read_txt()
+void read_txt() /*该函数最主要的结果是构建了边数组E。*/
 {
     char str[200]; /*声明一个字符数组str，用于临时存储从文件中读取的文本行。这里之所以声明一个200的大小是因为对于我们所读取的文件中，每一行顶多是一条边的两个顶点的编号，
     而一个200字符串的数组已经足够把这些信息存下去了。*/
@@ -123,9 +123,8 @@ void read_txt()
         int u, v;
         scanf("%d%d", &u, &v); /*使用scanf函数读取两个整数，表示当前边的两个顶点u和v。*/
         if (u == v) /*检查u和v是否相等，如果相等，说明存在自环，跳过这条边，不将其存储在E中。*/
-            continue;
-        /*如果没有自环，那么就通过find_id方法检查是否有重复边，该函数是基于map实现的。*/
-        u = find_id(u);
+            continue;        
+        u = find_id(u); /*如果没有自环，那么就通过find_id方法检查是否有重复边，该函数是基于map实现的。*/
         v = find_id(v);
         if (u > v) /*确保u小于等于v，因为无向图中的边可以以两种顺序表示。这样有助于避免重复边。*/
             swap(u, v); /*交换的目的是把边按照第一个顶点序号较小，而第二个顶点序号较大的方式来存储，减少重复存储。*/
@@ -245,10 +244,10 @@ struct BIT_SET /*位图运算，可以快速的判断出一个顶点的邻居和
     }
 } *adjN, *invN, inD, inG; /*adjN表示基于位图表示的邻接矩阵，invN表示非邻居矩阵，inD表示在候选集中的顶点集合，inG表示在当前图中的顶点集合。*/
 /*这里声明了 adjN 和 invN 作为 BIT_SET 类型的指针。在 C++ 中，指针是一个变量，它存储了另一个变量的内存地址。这里，adjN 和 invN 是指向 BIT_SET 类型对象的指针。通常这种声明用于
-指向动态分配的 BIT_SET 对象或对象数组。它们可能会在程序的其他部分使用 new 关键字进行内存分配。inD 和 inG 是 BIT_SET 类型的实例。与 adjN 和 invN 不同，它们不是指针，而是实际的对象。
+指向动态分配的 BIT_SET 对象或对象数组。它们可能会在程序的其他部分使用 new 关键字进行内存分配inD和inG是 BIT_SET 类型的实例。与 adjN 和 invN 不同，它们不是指针，而是实际的对象。
 这种声明表示在程序中直接创建了两个 BIT_SET 类型的对象，它们将拥有 BIT_SET 结构体中定义的所有属性和行为。这种声明方式允许在程序中灵活使用 BIT_SET 结构体。通过指针，可以管理动态分配
 的内存，这在处理大量数据或在运行时确定数据大小时非常有用。而直接声明的对象则用于那些大小已知且生命周期与声明它们的作用域相关的情况。在实际应用中，adjN 和 invN 可能用于存储图的邻接
-信息，比如一个图中顶点的邻接情况，而 inD 和 inG 可能表示图中顶点的某种状态或属性。具体的应用依赖于程序的其余部分以及这些变量是如何被使用的*/
+信息，比如一个图中顶点的邻接情况，而inD和inG可能表示图中顶点的某种状态或属性。具体的应用依赖于程序的其余部分以及这些变量是如何被使用的*/
 
 int *head, *nxt, *to, etot; /*to数组是存储一条边的另外一个顶点；etot是一个全局变量，用于追踪邻接表中边的总数。*/
 int *degree, *que, *nV, n;
@@ -538,13 +537,10 @@ inline void addedge(int *h, int v) /*它接受两个参数，一个是指向顶�
     *h = etot++;  /*更新头指针 *h 的值为当前边的索引 etot，然后 etot 自增，为下一次添加边做准备。etot 是全局变量，用于追踪邻接表中边的总数。*/
 }
 
-/*PreProcess 函数用于对图进行预处理，以便减小要处理的图的大小。PS：这里所采用的预处理方法实在是太过于简易了，仅仅根据顶点的度数进行了预处理，*/
-bool PreProcess(int S)
+/*PreProcess 函数用于对图进行预处理，以便减小要处理的图的大小。这个函数也会更新有效边的数量。PS：这里所采用的预处理方法实在是太过于简易了，仅仅根据顶点的度数进行了预处理，*/
+bool PreProcess(int S) /*根据我从下面的代码中来看，这里面的预处理部分仅仅使用了对于顶点度数的判断来筛选顶点*/
 {
-    /*根据我从下面的代码中来看，这里面的预处理部分仅仅使用了对于顶点度数的判断来筛选顶点*/
-
-    /*首先进行了内存分配*/
-    /*M 是边的数量，而 N 是顶点的数量*/
+    /*首先进行了内存分配,M 是边的数量，而 N 是顶点的数量*/
     nxt = new int[M + M]; /*nxt 和 to 用于存储邻接链表的信息，*/
     to = new int[M + M];
     degree = new int[N];                /*顶点度数数组*/
@@ -555,20 +551,18 @@ bool PreProcess(int S)
     memset(degree, 0, N * sizeof(int)); /*degree 数组被初始化为零（表示所有顶点的初始度数为零）*/
     memset(head, -1, N * sizeof(int));  /*head 数组被初始化为 -1（表示链表的开始）*/
     etot = 0;                           /*etot 被设置为 0，它表示边的总数，全称是e-total*/
-    for (int i = 0; i < M; ++i) /*遍历所有的边，构建度数数组degree和构建邻接表。*/
-    {
-        /*对于每一条边，它会增加两个顶点 u 和 v 的度数。因为边在读取文件的时候是去掉了重复的双向存储的，所以可以直接这么写，不需要除以2了。*/
-        int u = E[i].first, v = E[i].second;
+    for (int i = 0; i < M; ++i) /*这个循环处理图中的每一条边，增加相关顶点的度数，并通过addedge函数添加边。 这里看起来是在构建一个无向图，因为它同时添加了u到v和v到u的边。*/
+    {       
+        int u = E[i].first, v = E[i].second;  /*对于每一条边，它会增加两个顶点 u 和 v 的度数。因为边在读取文件的时候是去掉了重复的双向存储的，所以可以直接这么写，不需要除以2了。*/
         ++degree[u];
-        ++degree[v];
-        /*这个循环处理图中的每一条边，增加相关顶点的度数，并通过 addedge 函数添加边。 这里看起来是在构建一个无向图，因为它同时添加了 u 到 v 和 v 到 u 的边。*/
+        ++degree[v];    
         addedge(head + u, v); /*然后调用 addedge 函数将这两个顶点互相连接，构建无向图的邻接链表。*/
         addedge(head + v, u); /*head + u 和 head + v 分别代表顶点 u 和 v 的邻接链表头部的位置。*/
     }
     memset(outcore, 0, N * sizeof(bool)); /*初始化 outcore 数组，用于标记顶点是否满足某些条件*/
     int fr = 0, re = 0;  /*队列用于宽度优先搜索，fr 代表队列的头部，re 代表队列的尾部。*/  
     for (int i = 0; i < N; ++i)/*根据顶点度数将不符合要求的顶点筛选出来。*/
-        if (degree[i] < S - K) /*遍历每个顶点，如果它的度数小于 S - K，则将该顶点加入队列，并在 outcore 中标记为 true。这里利用的就是kplex的性质来处理的。*/
+        if (degree[i] < S - K) /*遍历每个顶点，如果它的度数小于 S - K，则将该顶点加入队列que，并在 outcore 中标记为 true。这里利用的就是kplex的性质来处理的。*/
             que[re++] = i, outcore[i] = true; /*再次验证了outcore里面的顶点*/
     /*用异或运算来检查队列是否为空，开始进行宽度优先搜索。*/
     while (fr ^ re) /*通过队列实现了类似宽度优先搜索的操作，用于进一步处理顶点和边的关系。这个符号是异或操作，异或操作的技巧是不同为1，相同为0。*/
@@ -586,7 +580,7 @@ bool PreProcess(int S)
     n = 0; /*为了构造新的顶点集合所设置的一个索引，初始化为0，后面自增。*/
     for (int i = 0; i < N; ++i)
         if (!outcore[i]) /*现在开始把没有被删除的顶点放在新数组里面*/
-            nV[i] = n++;  /*对于每个未标记为 outcore 的顶点 i，它在 nV 数组中被赋予一个新编号，然后 n 增加。这是为了创建一个新的顶点集，其中只包含特定条件的顶点。*/
+            nV[i] = n++;  /*对于每个未标记为 outcore 的顶点 i，它在 nV（new vertices) 数组中被赋予一个新编号，然后 n 增加。这是为了创建一个新的顶点集，其中只包含特定条件的顶点。*/
     if (n < S) /*如果处理后的顶点数量 n 小于阈值 S，函数返回 false。这里的S是我们传入的下界，也就是说至少要这么多顶点数才有意义。*/
         return false;
 
@@ -598,11 +592,10 @@ bool PreProcess(int S)
         int u = E[i].first, v = E[i].second;
         if (outcore[u] || outcore[v])
             continue; /*对于每一条边 (u, v)，如果它的任一端点 u 或 v 被标记为 outcore（即它们中的至少一个不在核心子图中），则跳过这条边。*/
-        /*否则，它将边重新映射为处理后的顶点编号，并存储在 E 数组中。*/
-        E[m++] = make_pair(nV[u], nV[v]);
+        E[m++] = make_pair(nV[u], nV[v]); /*否则，它将边重新映射为处理后的顶点编号，并存储在 E 数组中。*/
     }
     M = m; /*更新新的边数量。*/
-    del = new bool[n]; /*del用于标记已经从当前考虑的子图中删除的顶点，*/
+    del = new bool[n]; /*del用于标记已经从当前考虑的子图中删除的顶点，该数组和下面的其他一些数组都是在预处理函数里面被初始化。*/
     memset(del, 0, n * sizeof(bool));
     ins = new bool[n]; /*ins 用于标记已经加入子图的顶点。*/
     memset(ins, 0, n * sizeof(bool));
@@ -618,12 +611,10 @@ bool PreProcess(int S)
 
 /*getOrd 函数的主要作用是进行了退化排序（degeneracy ordering）。*/
 void getOrd()
-{
-    /*初始化度数数组degree为0，头指针数组head为-1，边的总数etot为0。这些操作准备数据结构，以存储图中每个顶点的邻接信息。*/
-    memset(degree, 0, n * sizeof(int));
+{  
+    memset(degree, 0, n * sizeof(int));  /*初始化度数数组degree为0，头指针数组head为-1，边的总数etot为0。这些操作准备数据结构，以存储图中每个顶点的邻接信息。*/
     memset(head, -1, n * sizeof(int));
     etot = 0; // etot 用于记录边的总数。
-
     /*遍历所有边，更新顶点的度数，并通过addedge函数将边添加到邻接表中。*/
     for (int i = 0; i < M; ++i) /*更新顶点的度数数组，因为前面已经删除过一些顶点了，所以需要重新更新。*/
     {
@@ -633,35 +624,23 @@ void getOrd()
         addedge(head + u, v); // 调用 addedge 函数，将 v 添加到 u 的邻接表中，同时将 u 添加到 v 的邻接表中。
         addedge(head + v, u); // 在addedge函数里面，etot的数量进行了自增。
     }
-
     /*声明一个优先队列Q以及一个布尔数组outcore，并初始化outcore为0。*/
-    /*Q用于存储顶点和它们的度数，*/
-    static priority_queue<pair<int, int>> Q; // 创建一个名为 Q 的优先队列（最小堆），其中元素为 pair<int, int> 类型，表示顶点的度数和顶点的编号。
+    static priority_queue<pair<int, int>> Q; // Q用于存储顶点和它们的度数，它是优先队列（最小堆），其中元素为 pair<int, int> 类型，表示顶点的度数和顶点的编号。
     /*这是一个通用的优先队列，可以容纳任何类型的元素。元素按升序排列，也就是说，队列的顶部总是包含最小的元素。关于优先队列的常用成员函数：
-    empty() 如果优先队列为空，则返回真； 
-    pop() 删除第一个元素 ；
-    push() 加入一个元素 ；
-    size() 返回优先队列中拥有的元素的个数； 
-    top() 返回优先队列中有最高优先级的元素。 */
-    memset(outcore, 0, n * sizeof(bool));     /*outcore用来标记顶点是否符合kplex的基本度数要求，其实它就是一种变了形式的visited数组，只不过这里强调了它的度数概念。*/
-
-    /*将所有顶点按度数的降序放入优先队列。*/
-    for (int i = 0; i < n; ++i)
+    empty() 如果优先队列为空，则返回真； pop() 删除第一个元素 ；push() 加入一个元素 ；size() 返回优先队列中拥有的元素的个数； top() 返回优先队列中有最高优先级的元素。 */
+    memset(outcore, 0, n * sizeof(bool)); /*outcore用来标记顶点是否符合kplex的基本度数要求，其实它就是一种变了形式的visited数组，只不过这里强调了它的度数概念。*/    
+    for (int i = 0; i < n; ++i) /*将所有顶点按度数的降序放入优先队列。*/
         Q.push(make_pair(-degree[i], i));
-    /*这段代码是在一个循环中，将每个顶点按照其度数（degree）加入了一个优先队列（Priority Queue）Q 中，
-    同时使用负数形式将度数变为负数，这是因为默认的优先队列是按照元素值的升序排列，而我们希望将度数最小的顶点排在队列的前面，因此将度数取负数来实现降序排列。
-    在默认的优先队列中，较大的数优先出列。但是我们想要实现退化排序，所以我们加了一个符号，从而可以使得度数最小的顶点优先出列。*/
+    /*这段代码是在一个循环中，将每个顶点按照其度数（degree）加入了一个优先队列（Priority Queue）Q 中，同时使用负数形式将度数变为负数，这是因为默认的优先队列是按照元素值的升序排列，
+    而我们希望将度数最小的顶点排在队列的前面，因此将度数取负数来实现降序排列。*/
 
-    /*接下来进行退化排序！！首先是不断的删除当前所有顶点中顶点度数最小的顶点*/
-    /*使用优先队列进行迭代，更新顶点的上界curB。*/
+    /*接下来进行退化排序！！首先是不断的删除当前所有顶点中顶点度数最小的顶点，使用优先队列进行迭代，更新顶点的上界curB。*/
     int curB = 1; /*初始化当前的上界（curB）为1。*/
     while (!Q.empty()) /*当顶点度数队列Q不为空的时候*/
     {
         int u = Q.top().second; /*取出队列顶部的顶点u（度数最小的顶点）并将其从队列中移除。*/
-        Q.pop();
-
-        /*如果顶点u已经不符合顶点的度数要求了，则跳过它。*/
-        if (outcore[u])
+        Q.pop();     
+        if (outcore[u]) /*如果顶点u已经不符合顶点的度数要求了，则跳过它。*/
             continue;
         outcore[u] = true; /*将这个顶点标记为已经处理过一次了，防止后面重复处理。*/
         /*接下来设置每一个顶点的上界。*/
@@ -673,75 +652,54 @@ void getOrd()
         {
             curB = degree[u] + K + 1; /*否则，更新curB为degree[u] + K + 1*/
             up_bound[u] = curB;       /*并将u的上界设置为新的curB。*/
-        }
-        /*记录完刚刚弹出来的最小度数的顶点后，现在就要把该顶点给删除，并更新顶点u的所有邻居的度数，减1。*/
-        for (int e = head[u]; ~e; e = nxt[e])
-        {
-            /*对于每个邻居顶点v，如果v还没有被处理（不是outcore），则减少v的度数，并将v（及其新的度数）重新插入优先队列。*/
-            int v = to[e];
+        }   
+        for (int e = head[u]; ~e; e = nxt[e]) /*记录完刚刚弹出来的最小度数的顶点后，现在就要把该顶点给删除，并更新顶点u的所有邻居的度数，减1。*/
+        { 
+            int v = to[e]; /*对于每个邻居顶点v，如果v还没有被处理（不是outcore），则减少v的度数，并将v（及其新的度数）重新插入优先队列。*/
             if (outcore[v])
                 continue;
             --degree[v]; /*更新因为度数最小的顶点u被删除之后，它的邻居顶点的度数变化*/
             Q.push(make_pair(-degree[v], v)); /*把度数变化后的邻居顶点再次存入优先级队列Q中，由于Q是优先级队列，所以它会自动的把元素放在正确的位置。*/
         }
-    }
-    /*现在已经把所有的顶点都已经处理过了，已经计算出来了每个顶点的上界和更新了它们的度数了。*/
-
-    /*初始化一个数组ordID，用于存储顶点的新顺序。*/
-    for (int i = 0; i < n; ++i)
-        ordID[i] = i;
-
+    } /*现在已经把所有的顶点都已经处理过了，已经计算出来了每个顶点的上界和更新了它们的度数了。*/
+    for (int i = 0; i < n; ++i)  /*初始化一个数组ordID，用于存储顶点的新顺序。*/
+        ordID[i] = i;   
     /*然后根据顶点的up_bound（其实就是core值）来对顶点进行升序排序。*/
-    /*在lambda函数中,它接受两个整数参数x和y, 然后根据自定义的规则进行比较。*/
-    sort(ordID, ordID + n, [](const int &x, const int &y) 
-         {
+    sort(ordID, ordID + n, [](const int &x, const int &y) { /*在lambda函数中,它接受两个整数参数x和y, 然后根据自定义的规则进行比较。*/
          if (up_bound[x] != up_bound[y]) /*如果它们不相等，那么返回值取决于up_bound[x]是否小于up_bound[y]。*/
             return up_bound[x] < up_bound[y];
-         return x < y; }); /*如果两个顶点具有相同的upper_bound值，那么按照顶点编号顺序从小到大进行排列。*/
-
-    /*根据升序排序的结果，更新顶点的新编号映射。*/
-    for (int i = 0; i < n; ++i)
+         return x < y; }); /*如果两个顶点具有相同的upper_bound值，那么按照顶点编号顺序从小到大进行排列。*/ 
+    for (int i = 0; i < n; ++i) /*根据升序排序的结果，更新顶点的新编号映射。*/
         nV[ordID[i]] = i;
-
-    /*重新初始化 degree、head 和 etot，并创建了两个名为 adjN 和 invN 的位集合数组，用于存储邻接关系和逆邻接关系。*/
-    memset(degree, 0, n * sizeof(int));
+    memset(degree, 0, n * sizeof(int)); /*重新初始化 degree、head 和 etot，并创建了两个名为 adjN 和 invN 的位集合数组，用于存储邻接关系和逆邻接关系。*/
     memset(head, -1, n * sizeof(int));
     etot = 0;
-
-    /*创建两个新的位集合数组adjN和invN，分别用于存储邻接关系和逆邻接关系。*/
     adjN = new BIT_SET[n]; /*adjN数组表示顶点之间的邻接关系矩阵*/
-    invN = new BIT_SET[n]; /*invN表示顶点之间的逆邻接关系矩阵*/
-    /*初始化adjN数组，为每个顶点准备邻接位集*/
-    for (int i = 0; i < n; ++i)
+    invN = new BIT_SET[n]; /*invN表示顶点之间的逆邻接关系矩阵*/   
+    for (int i = 0; i < n; ++i) /*初始化adjN数组，为每个顶点准备邻接位集*/
         adjN[i].init(n);
-    /*对每条边进行遍历，将边的两个顶点重新映射为排序后的新编号，并更新相应的邻接关系和逆邻接关系。*/
-    for (int i = 0; i < M; ++i) /*注意，这里的M在经过preprocess操作之后已经被更新了，现在应该对应着缩减后的边集合。*/
+    for (int i = 0; i < M; ++i) /*对每条边进行遍历，将边的两个顶点重新映射为排序后的新编号，并更新相应的邻接关系和逆邻接关系。注意，这里的M在经过preprocess操作之后已经被更新了，现在应该对应着缩减后的边集合。*/
     {
-        int u = E[i].first, v = E[i].second; /*从边数组E中获取当前边的两个顶点u和v。*/
-        /*将顶点u和v重新映射为排序后的新编号，nV存储了顶点的新编号映射关系。*/
-        u = nV[u];
-        v = nV[v];
-        /*增加顶点u和v的度数，表示它们相邻的边数增加了*/
-        ++degree[u];
-        ++degree[v];
-        /*调用addedge函数，将边的信息添加到邻接表中，同时增加了etot的值，用于记录边的总数。这两行代码用于构建图的邻接关系。*/
-        addedge(head + u, v);
-        addedge(head + v, u);
-        /*使用位集合数组adjN记录顶点之间的邻接关系。这两行代码将位集合中的相应位设置为1，表示u和v之间有一条边*/
-        adjN[u].set(v);
+        int u = E[i].first, v = E[i].second; /*从边数组E中获取当前边的两个顶点u和v。*/        
+        u = nV[u]; /*将顶点u和v重新映射为排序后的新编号，nV存储了顶点的新编号映射关系。*/
+        v = nV[v];  
+        ++degree[u]; /*增加顶点u和v的度数，表示它们相邻的边数增加了*/
+        ++degree[v];        
+        addedge(head + u, v); /*调用addedge函数，将边的信息添加到邻接表中，同时增加了etot的值，用于记录边的总数。这两行代码用于构建图的邻接关系。*/
+        addedge(head + v, u);     
+        adjN[u].set(v); /*使用位集合数组adjN记录顶点之间的邻接关系。这两行代码将位集合中的相应位设置为1，表示u和v之间有一条边*/
         adjN[v].set(u);
-    }
-    /*复制adjN到invN并对invN执行翻转操作，得到逆邻接关系。这个逆邻接关系矩阵在后面判断两个顶点不相邻的时候特别便捷！*/
-    for (int i = 0; i < n; ++i)
+    }   
+    for (int i = 0; i < n; ++i)  /*复制adjN到invN并对invN执行翻转操作，得到逆邻接关系。这个逆邻接关系矩阵在后面判断两个顶点不相邻的时候特别便捷！*/
     {
-        adjN[i].cp(invN[i]); /*复制顶点i的位集合到逆邻接关系invN[i]。注意，这里的复制关系是把adjN复制到invN！*/
+        adjN[i].cp(invN[i]); /*复制顶点i的位集合到逆邻接关系invN[i]。注意，这里的复制关系是把前者复制到后者！即把adjN复制到invN！*/
         invN[i].flip();      /* 对invN[i]执行翻转操作，将原来为1的位变为0，为0的位变为1，得到顶点i的逆邻接关系*/
     }
     /*初始化并翻转另外两个位集合inD和inG*/
     inD.init(n); /*用init(n)初始化位集合候选集D的大小为n*/
     inD.flip();  /*使用flip()函数对位集合进行翻转，将所有位的值从0变为1，表示初始化为"true"状态。*/
-    inG.init(n); /*同样初始化了另一个位集合inG，表示在图中。*/
-    inG.flip();
+    inG.init(n); /*同样初始化了另一个位集合inG*/
+    inG.flip(); /*使用flip()函数对位集合进行翻转，将所有位的值从0变为1，表示所有顶点刚开始都是在图中的状态。*/
     svex.clear(); /*由于还没有开始深度优先搜索，所以现在先清空svex*/
 }
 
@@ -752,10 +710,10 @@ int LB;
 
 void exit_program() /*退出程序的时候打印信息：（1）文件的名称filename；（2）s-bundle的s的值K；（3）深度优先搜索经历过的顶点数量dfs_node；（4）我们传入的s-bundle的下界LB；（5）算法运行所消耗的时间。*/
 {
-    printf("Filename: %s\n", filename);
-    printf("Value of K: %d\n", K);
+    printf("Your input filename: %s\n", filename);
+    printf("The value of s-bundle, s is: %d\n", K);
     printf("Search nodes: %lld\n", dfs_node);
-    printf("Lower bound: %d\n", LB);
+    printf("The size of the max s-bundle is: %d\n", LB);
     printf("Used Time: %.10f s\n", (double)(clock() - startTime) / CLOCKS_PER_SEC);
     // printf("The obtained solution is: %d\n",);
     // for(int i = 0; i < n; i++){
@@ -764,8 +722,8 @@ void exit_program() /*退出程序的时候打印信息：（1）文件的名称
     exit(0);
 }
 
-/*用于从图数据结构中删除节点u*/
-inline void delfrD(int u)
+
+inline void delfrD(int u) /*将一个顶点从候选集中删除。*/
 {
     inD.set(u);                           /*设置一个名为inD的数据结构中的第u位，通常用于标记节点u在删除集合中。*/
     inG.set(u);                           /*设置一个名为inG的数据结构中的第u位，通常用于标记节点u在图中。*/
@@ -977,17 +935,14 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
     // printf("LB is %d, the size of svex is %d\n", LB, (int)svex.size());
     LB = max(LB, (int)svex.size()); /*更新当前的下界，其中svex是当前的解s-bundle。*/
     if (curS <= LB) /*递归的终止条件！！*/
-        return; /*如果 curS（当前解）小于等于 LB，则函数返回，停止进一步搜索。*/
-
-    /*找出当前顶点度数最小的未删除顶点。*/
-    int minID = -1;
-    for (int i = 0; i < n; ++i)
+        return; /*如果 curS（当前解）小于等于 LB，则函数返回，停止进一步搜索。*/  
+    int minID = -1; 
+    for (int i = 0; i < n; ++i) /*找出当前顶点度数最小的未删除顶点。*/
         if (!del[i])
         {
             if (minID == -1 || degree[i] < degree[minID])
                 minID = i;
         }
-
     /*如果最小度数的顶点的度数大于等于 curS - K，则调用 dfs_kbundle 函数并返回。注意了，后面的dfs会一直执行到满足这个if条件为止，因为dfs_kbundle是最核心的分支方法，这也是建立
     在kplex的基础上的。也就是说，一个s-bundle一定先得是一个s-plex，其次再从这些s-plex里面提取出一个合格的s-bundle。*/
     if (degree[minID] >= curS - K) /*这里就验证了当前的顶点集合是一个kplex，这也就满足了当前的图是一个s-bundle的前置条件。*/
@@ -1080,14 +1035,10 @@ void dfs(int curS) /*传入的参数curS是当要搜索的顶点集合的大小�
             return;
         }
     }
-    /*颜色获取与分支处理*/
     if (get_color() <= LB) /*如果根据染色法计算出来的上界upper bound比不上当前的下界，那么说明当前的分支可以被砍掉。*/
         return;
-    /*收集分支处理的顶点*/
-    vector<int> branch; /*branch就是对应着最小度数顶点不相邻的顶点集合。*/
-
-    /*接下来开始进入多分支策略，每次都从当前图中度数最小的顶点出发，然后找和这个顶点不相邻的顶点集合。*/
-    for (int x = 0; x < n; ++x)
+    vector<int> branch; /*branch就是对应着最小度数顶点不相邻的顶点集合。*/  
+    for (int x = 0; x < n; ++x) /*接下来开始进入多分支策略，每次都从当前图中度数最小的顶点出发，然后找和这个顶点不相邻的顶点集合。*/
         if (!del[x] && x != minID && !ins[x]) /*如果顶点x未被删除、且顶点x不是度数最小的顶点，同时顶点x未被插入*/
         {
             /*如果上述条件都满足，继续检查另一个条件*/
@@ -1196,7 +1147,7 @@ void work() /*核心的函数，调用分支限界方法来求解max s-bundle问
     srand(time(NULL));/*初始化随机数生成器的种子为当前时间。这通常用于确保每次程序运行时产生的随机数序列都是不同的。*/
     startTime = clock(); /*记录函数开始执行时的处理器时钟，这用于计算程序执行的时间。*/
     dfs_node = 0;/*初始化dfs_node变量，用于跟踪在深度优先搜索（DFS）中访问的节点数量。*/ 
-    LB = max(wG, K); /*设置变量LB（可能代表下界 Lower Bound）为变量wG和K的最大值。这样设置的原因是s-bundle的最起码大小要为s，也就是这里的K。我感觉这个作者写的代码太烂了，远远不如常老师、师弟和开强的代码质量，后面我要好好的重构。*/    
+    LB = max(wG, K); /*设置变量LB（代表下界 Lower Bound）为变量wG和K的最大值。这样设置的原因是s-bundle的最起码大小要为s，也就是这里的K。我感觉这个作者写的代码太烂了，远远不如常老师、师弟和开强的代码质量，后面我要好好的重构。*/    
     for (int i = 0; i < 16; ++i)/*初始化一个名为twoPow的数组。该数组的索引表示2的幂，而数组中的元素表示对应的指数。例如，twoPow[1]将被设置为0，twoPow[2]将被设置为1，twoPow[4]将被设置为2，以此类推。
     这个映射关系通常用于处理二进制位操作。这个循环将twoPow数组初始化为一个指数映射表。这个数组的主要目的是让我们快速的找出某个数是2的几次方。*/
         twoPow[1 << i] = i;
@@ -1208,23 +1159,18 @@ void work() /*核心的函数，调用分支限界方法来求解max s-bundle问
 }
 
 void MAIN() /*主要分为两个部分：1）从文件中读取图数据；2）调用work函数。*/
-{
-    /* 1）从文件中读取图数据；*/
-    /*初始化一个整数p为字符串filename的长度减一。目的是找到文件名中的最后一个字符，通常是文件扩展名的一部分。*/
-    int p = strlen(filename) - 1;
+{    
+    int p = strlen(filename) - 1;  /* 1）从文件中读取图数据：初始化一个整数p为字符串filename的长度减一。目的是找到文件名中的最后一个字符，通常是文件扩展名的一部分。*/
     while (filename[p] != '.') /*这个循环递减p直到找到'.'字符，表示文件扩展名的开始。*/
         --p;
     ++p; /*找到'.'后，p增加，指向文件扩展名的开始。*/
-    /*程序检查文件扩展名，并根据扩展名调用不同的函数。*/
-    if (strcmp(filename + p, "clq") == 0) /*如果扩展名是"clq"，它调用read_clq()；*/
+    if (strcmp(filename + p, "clq") == 0) /*程序检查文件扩展名，并根据扩展名调用不同的函数。如果扩展名是"clq"，它调用read_clq()；*/
         read_clq();
     else if (strcmp(filename + p, "graph") == 0) /*如果是"graph"，调用read_graph()；*/
         read_graph();
     else /*否则，调用read_txt()。*/
-        read_txt();
-
-    /*2）调用work函数。*/
-    work();
+        read_txt();    
+    work(); /*2）调用work函数。*/
 }
 
 int main(int argc, char **argv)
@@ -1236,9 +1182,8 @@ int main(int argc, char **argv)
         printf("Open %s error.\n", filename);
         return 0;
     }
-    /*这些行从命令行参数中读取整数值，并将它们存储在变量K和wG中。*/
-    sscanf(argv[2], "%d", &K);  /*读取s-bundle中的s值*/
-    sscanf(argv[3], "%d", &wG); /*读取下界*/
-    MAIN();
+    sscanf(argv[2], "%d", &K);  /*读取s-bundle中的s值。*/
+    sscanf(argv[3], "%d", &wG); /*读取用户手动输入的下界。*/ 
+    MAIN(); /*调用求解max s-bundle的主函数。*/
     return 0;
 }

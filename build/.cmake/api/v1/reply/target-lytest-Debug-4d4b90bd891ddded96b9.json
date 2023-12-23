@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "lytest.exe"
+			"path" : "E:/GitHub/lytest.exe"
 		},
 		{
-			"path" : "lytest.pdb"
+			"path" : "E:/GitHub/lytest.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -27,7 +27,7 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 8,
+				"line" : 11,
 				"parent" : 0
 			}
 		]
@@ -38,7 +38,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -std=gnu++14"
+					"fragment" : "-g -std=gnu++11"
 				},
 				{
 					"fragment" : "-O2"
@@ -51,7 +51,7 @@
 				[
 					1
 				],
-				"standard" : "14"
+				"standard" : "11"
 			},
 			"sourceIndexes" : 
 			[
